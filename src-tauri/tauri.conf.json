@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Together Desktop",
-  "version": "0.2.0",
+  "productName": "Bello Together",
+  "version": "0.3.0",
   "identifier": "app.together.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -15,7 +15,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Together Desktop",
+        "title": "Bello Together",
         "url": "index.html",
         "width": 1120,
         "height": 760,
@@ -25,7 +25,7 @@
       },
       {
         "label": "world",
-        "title": "Together Desktop — World",
+        "title": "Bello Together \u2014 World",
         "url": "world.html",
         "transparent": true,
         "decorations": false,
@@ -49,7 +49,7 @@
     "active": true,
     "targets": "all",
     "category": "Entertainment",
-    "shortDescription": "A pixel couple living on your desktop.",
+    "shortDescription": "A pixel couple living on your desktop \u2014 by Bello.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -57,7 +57,15 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "macOS": { "minimumSystemVersion": "11.0" },
-    "windows": { "webviewInstallMode": { "type": "embedBootstrapper" } }
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      }
+    },
+    "publisher": "Bello",
+    "copyright": "\u00a9 2026 Bello"
   }
 }

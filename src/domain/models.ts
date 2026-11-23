@@ -110,6 +110,15 @@ export interface WorldSettings {
   highScores: Record<string, number>;
   /** Questions they may ask when clicked (0 = never, 100 = often). */
   questionChance: number;
+  /** Optional scene they live in (null = straight on the transparent desktop). */
+  scene: string | null;
+  scenePos: 'left' | 'center' | 'right';
+  sceneLight: boolean;
+  /** Scene size (pixel scale, free — set by dragging its corner). Null = same as the characters. */
+  sceneScale: number | null;
+  /** Scene top-left as fractions of the screen (set by dragging it). Null = use scenePos. */
+  sceneX: number | null;
+  sceneY: number | null;
 }
 
 export const DEFAULT_SETTINGS: WorldSettings = {
@@ -127,6 +136,12 @@ export const DEFAULT_SETTINGS: WorldSettings = {
   moods: {},
   highScores: {},
   questionChance: 35,
+  scene: null,
+  scenePos: 'right',
+  sceneLight: true,
+  sceneScale: null,
+  sceneX: null,
+  sceneY: null,
 };
 
 export interface WorldEvent {

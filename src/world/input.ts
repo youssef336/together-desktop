@@ -16,8 +16,24 @@ const PARTNER_LINES = ['Are you okay?', 'Careful!', 'Hey, bring them back!', 'He
 
 /** Pointer handling: click reactions, double-click quick menu, right-click menu, drag and drop, hover. */
 export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu, games: GameController, talk: Interactions): void {
-  let down: { actor: Actor; x: number; y: number; offX: number; offY: number; dragging: boolean } | null = null;
+  let down: { actor: Actor; x: number; y: number; offX: number; offY: number; dragging: boolean; at: number } | null = null;
   let lastClick: { id: string; at: number; timer: number } | null = null;
+  /** Moving or resizing the scene. */
+  let sceneDrag: {
+    kind: 'move' | 'resize';
+    x: number;
+    y: number;
+    offX: number;
+    offY: number;
+    moved: boolean;
+    obj: ReturnType<typeof w.scene.objectAt>;
+    startScale: number;
+    startW: number;
+    rect: { x: number; y: number };
+    at: number;
+  } | null = null;
+  /** A drag needs the button actually held a moment — quick clicks never move things. */
+  const isRealDrag = (e: PointerEvent, since: number) => (e.buttons & 1) === 1 && performance.now() - since > 90;
   const hoverWaveAt = new Map<string, number>();
   const drags = new Map<string, number[]>();
 
@@ -32,17 +48,61 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
     if (w.game) return; // bubble games: the desktop under the characters stays as it is
     menu.close();
     const actor = actorAt(e.clientX, e.clientY);
-    if (!actor) return;
+    if (!actor) {
+      if (!w.scene.contains(e.clientX, e.clientY) && !w.scene.handleAt(e.clientX, e.clientY)) return;
+      // Press inside the scene: a click uses the object under it; a drag moves the scene;
+      // a drag from the bottom-right grip resizes it.
+      canvas.setPointerCapture(e.pointerId);
+      sceneDrag = {
+        kind: w.scene.handleAt(e.clientX, e.clientY) ? 'resize' : 'move',
+        x: e.clientX,
+        y: e.clientY,
+        offX: w.scene.rect.x - e.clientX,
+        offY: w.scene.rect.y - e.clientY,
+        moved: false,
+        obj: w.scene.objectAt(e.clientX, e.clientY),
+        startScale: w.scene.scale,
+        startW: w.scene.rect.w,
+        rect: { x: w.scene.rect.x, y: w.scene.rect.y },
+        at: performance.now(),
+      };
+      return;
+    }
     canvas.setPointerCapture(e.pointerId);
-    down = { actor, x: e.clientX, y: e.clientY, offX: actor.x - e.clientX, offY: actor.y - e.clientY, dragging: false };
+    down = { actor, x: e.clientX, y: e.clientY, offX: actor.x - e.clientX, offY: actor.y - e.clientY, dragging: false, at: performance.now() };
   });
 
   canvas.addEventListener('pointermove', (e) => {
     if (games.pointerMove(e.clientX, e.clientY)) return;
+    if (sceneDrag) {
+      if (!sceneDrag.moved && (Math.hypot(e.clientX - sceneDrag.x, e.clientY - sceneDrag.y) < DRAG_START_PX || !isRealDrag(e, sceneDrag.at))) return;
+      if (!sceneDrag.moved) {
+        sceneDrag.moved = true;
+        void native.setCapture(true);
+      }
+      const view = w.renderer.view;
+      const before = { ...w.scene.rect, floor: w.scene.floorY };
+      if (sceneDrag.kind === 'move') w.scene.moveTo(e.clientX + sceneDrag.offX, e.clientY + sceneDrag.offY, view);
+      else {
+        const width = Math.max(40, sceneDrag.startW + (e.clientX - sceneDrag.x));
+        w.scene.resizeTo((sceneDrag.startScale * width) / sceneDrag.startW, view);
+      }
+      // They live in it: carry them along, keeping their place on the floor.
+      for (const a of w.actors) {
+        if (a.mode === 'dragged') continue;
+        const rel = (a.x - before.x) / before.w;
+        a.x = w.scene.rect.x + rel * w.scene.rect.w;
+        a.y = w.scene.floorY;
+        if (a.target) a.target = null;
+      }
+      w.renderer.dirty = true;
+      w.kick();
+      return;
+    }
     if (!down) return;
     const { actor } = down;
     if (!down.dragging) {
-      if (w.settings.locked || Math.hypot(e.clientX - down.x, e.clientY - down.y) < DRAG_START_PX) return;
+      if (w.settings.locked || Math.hypot(e.clientX - down.x, e.clientY - down.y) < DRAG_START_PX || !isRealDrag(e, down.at)) return;
       down.dragging = true;
       if (w.runner && [w.runner.ctx.initiator, w.runner.ctx.partner].includes(actor)) {
         w.runner.finish();
@@ -63,6 +123,17 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
   });
 
   const release = (e: PointerEvent) => {
+    if (sceneDrag) {
+      const d = sceneDrag;
+      sceneDrag = null;
+      if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+      if (d.moved) {
+        void native.setCapture(false);
+        w.clampAll();
+        void w.patchSettings(w.scene.persisted(w.renderer.view));
+      } else if (d.obj) w.useObject(d.obj);
+      return;
+    }
     if (!down) return;
     const { actor, dragging } = down;
     down = null;
@@ -70,6 +141,7 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
     if (dragging) {
       void native.setCapture(false);
       actor.mode = 'free';
+      w.clampAll(); // back inside the scene floor, if there is one
       actor.nextThinkAt = w.time + 5;
       actor.animator.play('land', { force: true });
       w.savePosition(actor);

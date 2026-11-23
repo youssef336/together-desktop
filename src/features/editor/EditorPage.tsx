@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BASE_APPEARANCE, randomizeAppearance } from '../../domain/appearance';
 import { createCharacter, createCouple, duplicateCharacter } from '../../domain/factory';
 import type { Character } from '../../domain/models';
-import { TEMPLATES } from '../../domain/templates';
+import { BELLO, TEMPLATES } from '../../domain/templates';
 import type { ClipId } from '../../engine/clips';
 import { useApp } from '../../stores/app-store';
 import { CharacterPreview } from '../../ui/CharacterPreview';
@@ -26,7 +26,8 @@ export function EditorPage({ id, role }: Props) {
   const characters = useApp((s) => s.characters);
   const existing = id ? characters.find((c) => c.id === id) : undefined;
   const [initial] = useState<Character>(
-    () => existing ?? createCharacter(role === 'partner' ? 'My partner' : role === 'me' ? 'Me' : 'New character'),
+    // The first character starts as Bello (the creator's own look); every part stays editable.
+    () => existing ?? (role === 'me' ? createCharacter('Bello', BELLO) : createCharacter(role === 'partner' ? 'My partner' : 'New character')),
   );
   const draft = useHistory<Character>(initial);
   const [tab, setTab] = useState<Tab>('Face');

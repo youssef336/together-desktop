@@ -114,6 +114,10 @@ export class ContextMenu {
       item('More…', () => this.open(actor, x, y, 'full'));
     }
 
+    const credit = document.createElement('div');
+    credit.className = 'td-menu-credit';
+    credit.textContent = 'Bello Together ♥';
+    el.appendChild(credit);
     el.hidden = false;
     this.reposition(x, y);
   }

@@ -37,6 +37,7 @@ async function boot(): Promise<void> {
 
   window.addEventListener('resize', () => {
     w.renderer.resize();
+    w.scene.layout(w.renderer.view);
     w.clampAll();
     w.kick();
   });
@@ -60,6 +61,10 @@ async function boot(): Promise<void> {
     if (cmd === 'reload') void w.load();
     if (cmd.startsWith('show:')) void w.setShow(cmd.slice(5) as 'both' | 'a' | 'b');
     if (cmd === 'stop-game') games.stop();
+    if (cmd.startsWith('scene:')) {
+      const id = cmd.slice(6);
+      void w.patchSettings({ scene: id === 'none' ? null : id }).then(() => w.load());
+    }
   });
   scheduleDailyGreetings(w);
   // Exposed for debugging from the devtools console only.

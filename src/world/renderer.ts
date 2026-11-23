@@ -54,6 +54,11 @@ export class Renderer {
     const s = world.scale;
 
     if (!world.settings?.hidden) {
+      const sceneBox = world.game ? null : world.scene.draw(ctx, world.time);
+      if (sceneBox) {
+        drawn.push(pad(sceneBox, 2));
+        hits.push(sceneBox);
+      }
       const actors = [...world.actors].sort((a, b) => a.y - b.y);
       for (const a of actors) {
         const frame = a.animator.frame();

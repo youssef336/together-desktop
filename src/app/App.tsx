@@ -11,6 +11,7 @@ import { SettingsPage } from '../features/settings/SettingsPage';
 import { EVENTS, on, type WorldStatus } from '../platform/bridge';
 import { useApp, type View } from '../stores/app-store';
 import { Sidebar } from './Sidebar';
+import { Splash } from './Splash';
 
 function parseNavigate(target: string): View | null {
   if (target.startsWith('editor:')) return { name: 'editor', id: target.slice(7) };
@@ -43,6 +44,7 @@ export function App() {
 
   return (
     <div className="flex h-full">
+      <Splash />
       <Sidebar />
       <main className="min-w-0 flex-1 overflow-y-auto">
         {isBrowserPreview && (

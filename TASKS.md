@@ -65,6 +65,10 @@ Legend: `[x]` done and verified · `[~]` done, not yet verified on every platfor
 - [ ] More games: chase / tag, “feed them” (drag snacks to them), memory cards
 - [ ] Game sounds (off by default)
 
+## Branding
+- [x] “Bello Together”: big Bello title, opening splash, “Made with ♥ by Bello”, About card, publisher / copyright in installers
+- [x] Bello (the creator's own character) ships as the first template and the default first character
+
 ## Phase 7 — Dialogue & personality
 - [x] Pixel speech bubbles: wrap, size to text, stay on screen, stack, fade
 - [x] Categories: casual, romantic, funny, teasing, supportive, activity, thoughts, reactions, greetings, morning, night, special
@@ -73,8 +77,16 @@ Legend: `[x]` done and verified · `[~]` done, not yet verified on every platfor
 - [x] Good morning / good night (once per day)
 - [ ] AI provider abstraction (off by default; local / rule-based / AI)
 
-## Phase 8 — Scenes
-- [ ] Scene window + objects (bedroom, coffee shop, park, beach, rainy window, night sky, cozy room, Valentine's)
+## Phase 8 — Scenes (v0.3)
+- [x] 8 procedural pixel scenes: bedroom, coffee shop, park, beach, rainy window, night sky, cozy room, Valentine's room
+- [x] Live parts: rain, twinkling stars + shooting star, waves, drifting clouds, fire, steam, swaying plants, radio lights
+- [x] Furniture with jobs: bed/umbrella (nap), sofa/bench (sit), table (coffee), radio (dance), lamp/street lamp (lights on/off), plant/tree (water it), balloons (gift), counter/fireplace (chat)
+- [x] Activities walk to their spot in the scene (coffee at the table, naps on the bed…); solo character uses the spot alone
+- [x] Move the scene by dragging it; resize from the corner grip (or the size slider); left / center / right presets; lights on/off
+- [x] Scenes page with live previews; tray → Scene; games still use the whole screen
+- [x] Tests: every scene paints in bounds with a footprint per object; spots resolve
+- [ ] Characters scale with the scene (option)
+- [ ] Seasonal scenes (Halloween, winter)
 
 ## Phase 9 — Settings & optimisation
 - [x] Size, bubble time, mouse reactions, lock, pause, hide, low-performance, delete all data

@@ -1,7 +1,7 @@
 {
   "name": "together-desktop",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "A little world for the two of you — a pixel couple living on your desktop.",
   "scripts": {
@@ -13,7 +13,8 @@
     "app": "tauri dev",
     "bundle": "tauri build",
     "sheet": "tsx tools/sprite-sheet.ts",
-    "icons": "tsx tools/icons.ts && tauri icon src-tauri/icons/source.png"
+    "icons": "tsx tools/icons.ts && tauri icon src-tauri/icons/source.png",
+    "scenes": "tsx tools/scene-sheet.ts"
   },
   "dependencies": {
     "@fontsource/pixelify-sans": "5.3.0",

@@ -22,7 +22,7 @@ The user can create their character and their partner, customise and save both, 
 | 6 | Couple activities — coffee, hug, dance, walk, sit, sleep, play, talk, moments | ✅ |
 | 6b | Play together — who's out, mini games, choice bubbles, mood, comfort | ✅ v0.2 |
 | 7 | Dialogue & personality — engine, profiles, reactions, custom lines ✅; **optional AI provider layer** ⏳ |  🟡 |
-| 8 | Scenes — optional backdrop window with objects | ⏳ |
+| 8 | Scenes — 8 pixel rooms on the desktop, furniture with jobs, move/resize, activity spots | ✅ v0.3 |
 | 9 | Settings & optimisation — shortcuts, special dates, perf budget checks | 🟡 |
 | 10 | Testing & release — Windows + macOS matrix, multi-monitor, CPU/RAM measurements, signed installers | ⏳ |
 

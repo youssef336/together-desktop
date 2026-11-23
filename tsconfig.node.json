@@ -24,7 +24,10 @@
     "vite.config.ts",
     "tools",
     "src/domain",
-    "src/pixel/*.ts"
+    "src/pixel/*.ts",
+    "src/scenes/paint.ts",
+    "src/scenes/objects.ts",
+    "src/scenes/scenes.ts"
   ],
   "exclude": [
     "src/pixel/sprite-cache.ts",

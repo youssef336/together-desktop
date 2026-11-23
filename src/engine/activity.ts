@@ -15,6 +15,8 @@ export interface Stage {
   exchange(category: DialogueCategory, opener: Actor, listener: Actor, activity?: ActivityId): { first?: string; reply?: string };
   effect(kind: EffectKind, x: number, y: number, seconds?: number): void;
   rnd(): number;
+  /** Optional: where an activity happens in the current scene (the bed, the table…). */
+  spot?(activity: string): { x: number; y: number } | null;
   /** Optional: nudge a character's mood (the world implements it; tests may not). */
   mood?(actor: Actor, cause: 'comforted'): void;
 }
@@ -23,6 +25,8 @@ export interface Ctx {
   initiator: Actor;
   partner: Actor;
   stage: Stage;
+  /** The running activity's id (set by the runner) — used to find its spot in a scene. */
+  activity?: string;
 }
 
 /** One state of an activity's state machine. `update` returns true when the state is done. */
@@ -48,13 +52,28 @@ export const wait = (sec: number, name = 'wait'): Step => {
   return { name, enter: () => (t = 0), update: (_c, dt) => (t += dt) >= sec };
 };
 
-/** Initiator walks next to the partner (gap in sprite px); the partner turns to look. */
+/**
+ * Initiator walks next to the partner (gap in sprite px); the partner turns to look.
+ * In a scene with a spot for this activity (bed, table, sofa…) both walk there instead.
+ */
 export const meet = (gap: number, opts: { run?: boolean } = {}): Step => {
   let t = 0;
+  let both = false;
   return {
     name: 'meet',
-    enter: ({ initiator: i, partner: p, stage }) => {
+    enter: (ctx) => {
+      const { initiator: i, partner: p, stage } = ctx;
       t = 0;
+      const spot = ctx.activity ? stage.spot?.(ctx.activity) : null;
+      if (spot) {
+        both = true;
+        const half = stage.px(gap) / 2;
+        const [left, right] = i.x <= p.x ? [i, p] : [p, i];
+        left.walkTo(spot.x - half, spot.y, { run: opts.run });
+        right.walkTo(spot.x + half, spot.y, { run: opts.run });
+        return;
+      }
+      both = false;
       const side = i.x <= p.x ? -1 : 1;
       let tx = p.x + side * stage.px(gap);
       // Keep both on screen: if there is no room on that side, use the other one.
@@ -65,9 +84,12 @@ export const meet = (gap: number, opts: { run?: boolean } = {}): Step => {
     },
     update: ({ initiator: i, partner: p }, dt) => {
       t += dt;
-      p.faceTowards(i);
-      if (t > 25) i.stop(); // safety valve — never hang an activity
-      return i.arrived;
+      if (!both) p.faceTowards(i);
+      if (t > 25) {
+        i.stop(); // safety valve — never hang an activity
+        p.stop();
+      }
+      return both ? i.arrived && p.arrived : i.arrived;
     },
   };
 };
@@ -249,7 +271,9 @@ export class ActivityRunner {
     readonly def: ActivityDef,
     readonly ctx: Ctx,
     private readonly steps: Step[] = def.build(ctx),
-  ) {}
+  ) {
+    ctx.activity = def.id;
+  }
 
   get stepName(): string {
     return this.steps[this.index]?.name ?? 'start';

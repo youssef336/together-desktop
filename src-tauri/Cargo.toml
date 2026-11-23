@@ -1,7 +1,8 @@
 [package]
 name = "together-desktop"
-version = "0.2.0"
+version = "0.3.0"
 description = "A little world for the two of you."
+authors = ["Bello"]
 edition = "2021"
 rust-version = "1.80"
 

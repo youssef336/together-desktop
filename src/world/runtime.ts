@@ -13,6 +13,8 @@ import { think } from './behavior';
 import type { Game } from './games/types';
 import { Particles } from './particles';
 import { Renderer } from './renderer';
+import { SceneLayer } from './scene-layer';
+import type { Placed } from '../scenes/scenes';
 
 /**
  * The desktop world: owns the actors, the activity runner, the scheduler and the clock.
@@ -25,6 +27,7 @@ export class World implements Stage {
   runner: ActivityRunner | null = null;
   readonly scheduler = new CoupleScheduler();
   readonly particles = new Particles();
+  readonly scene = new SceneLayer();
   readonly renderer: Renderer;
   time = 0;
   private momentAt = 40;
@@ -57,6 +60,8 @@ export class World implements Stage {
     return n * this.scale;
   }
   get bounds() {
+    // In a scene they live on its floor; games always use the whole screen.
+    if (this.scene.active && !this.game) return this.scene.bounds();
     const { w, h } = this.renderer.view;
     return { left: this.px(14), right: w - this.px(14), top: this.px(42), bottom: h - 2 };
   }
@@ -79,6 +84,9 @@ export class World implements Stage {
     const o = opener.character.nickname || opener.character.name;
     const l = listener.character.nickname || listener.character.name;
     return { first: fillTokens(line.first, o, l), reply: line.reply ? fillTokens(line.reply, l, o) : undefined };
+  }
+  spot(activity: string): { x: number; y: number } | null {
+    return this.game ? null : this.scene.spot(activity as ActivityId);
   }
   effect(kind: EffectKind, x: number, y: number, seconds = 2.5): void {
     this.particles.emit(kind, x, y, seconds);
@@ -107,6 +115,7 @@ export class World implements Stage {
   async load(): Promise<void> {
     const [settings, couples, characters] = await Promise.all([store.getSettings(), store.listCouples(), store.listCharacters()]);
     this.settings = settings;
+    const sceneChanged = this.scene.configure(settings, this.renderer.view);
     this.couple = couples.find((c) => c.id === settings.activeCoupleId) ?? couples[0] ?? null;
     const byId = new Map(characters.map((c) => [c.id, c]));
     const pair = this.couple ? [byId.get(this.couple.characterAId), byId.get(this.couple.characterBId)] : [];
@@ -131,6 +140,15 @@ export class World implements Stage {
       actor.nextThinkAt = this.time + 4 + i * 3;
       return actor;
     });
+    if (this.scene.active && sceneChanged) {
+      // Moving into a scene: stand them side by side in the middle of the floor.
+      const { left, right } = this.scene.bounds();
+      this.actors.forEach((a, i) => {
+        a.target = null;
+        a.x = left + (right - left) * (this.actors.length === 1 ? 0.5 : i === 0 ? 0.42 : 0.58);
+        a.facing = i === 0 ? 1 : -1;
+      });
+    }
     this.clampAll();
     if (this.couple) this.scheduler.plan({ couple: this.couple, now: this.time });
     void native.setCursorFeed(settings.mouseReactions && !settings.paused);
@@ -180,7 +198,14 @@ export class World implements Stage {
 
   clampAll(): void {
     const { left, right, top, bottom } = this.bounds;
+    const { w, h } = this.renderer.view;
     for (const a of this.actors) {
+      if (a.mode === 'dragged') {
+        // Picked up: anywhere on screen; the scene floor takes them back on drop.
+        a.x = Math.max(this.px(10), Math.min(w - this.px(10), a.x));
+        a.y = Math.max(this.px(40), Math.min(h - 2, a.y));
+        continue;
+      }
       a.x = Math.max(left, Math.min(right, a.x));
       a.y = Math.max(top, Math.min(bottom, a.y));
     }
@@ -278,7 +303,8 @@ export class World implements Stage {
     if (this.game) return low ? 1 / 30 : 1 / 60;
     if (this.paused) return 1;
     if (this.busy()) return low ? 1 / 15 : 1 / 30;
-    const next = Math.min(...this.actors.map((a) => a.animator.nextChangeIn()), 0.5);
+    const sceneTick = this.scene.active && this.scene.animated ? (low ? 0.25 : 0.125) : 0.5;
+    const next = Math.min(...this.actors.map((a) => a.animator.nextChangeIn()), 0.5, sceneTick);
     return Math.max(low ? 1 / 6 : 1 / 12, next);
   }
 
@@ -305,6 +331,17 @@ export class World implements Stage {
       else if (this.time >= this.momentAt) this.moment();
     }
     this.updateMoods(dt);
+    if (this.scene.tick(this.time)) this.renderer.dirty = true;
+    if (this.scene.active) {
+      // After sitting on the sofa or napping on the bed, hop back down to the floor.
+      const floor = this.scene.floorY;
+      for (const a of this.actors) {
+        if (a.mode === 'free' && a.arrived && Math.abs(a.y - floor) > 0.5) {
+          a.y = floor;
+          this.renderer.dirty = true;
+        }
+      }
+    }
     const mode = this.couple?.behavior.mode ?? 'relaxed';
     for (const a of this.actors) {
       if (a.mode !== 'free' || !a.arrived || this.time < a.nextThinkAt) continue;
@@ -363,6 +400,47 @@ export class World implements Stage {
       this.comfortAt = this.time + 120;
       this.startActivity('comfort', other.id, 'auto');
     }
+  }
+
+  /** A click on something in the scene. */
+  useObject(o: Placed): void {
+    const it = o.interact;
+    if (!it || this.game) return;
+    const free = this.actors.filter((a) => a.mode === 'free');
+    if (it.kind === 'light') {
+      this.scene.light = !this.scene.light;
+      this.scene.configure({ ...this.settings, sceneLight: this.scene.light }, this.renderer.view);
+      void this.patchSettings({ sceneLight: this.scene.light });
+      const a = free[0];
+      if (a) this.say(a, this.scene.light ? 'Ah, light! 💡' : 'Cozy... 🌙');
+    } else if (it.kind === 'gift') {
+      this.startActivity('gift');
+    } else if (it.kind === 'water') {
+      const at = this.scene.centreOf(o);
+      const a = free.sort((p, q) => Math.abs(p.x - (at?.x ?? 0)) - Math.abs(q.x - (at?.x ?? 0)))[0];
+      if (!a || !at) return;
+      const tx = at.x + (a.x < at.x ? -1 : 1) * this.px(10);
+      a.walkTo(tx, a.y, { then: 'happy' });
+      const ms = (Math.abs(tx - a.x) / (a.speed * (this.scale / 3))) * 1000 + 300;
+      window.setTimeout(() => {
+        a.faceTowards({ x: at.x } as Actor);
+        this.say(a, ['Grow, little one 🌱', 'Drink up! 💧', 'You look thirsty.'][Math.floor(this.rnd() * 3)]!);
+        this.effect('sparkle', at.x, at.y - this.px(16), 1);
+        this.kick();
+      }, ms);
+    } else if (it.kind === 'activity') {
+      if (this.actors.length === 2) this.startActivity(it.id);
+      else if (free[0]) {
+        // Alone: go there and do the solo version.
+        const a = free[0];
+        const spot = this.scene.spot(it.id) ?? this.scene.centreOf(o);
+        const solo = { sleep: 'sleep', sit: 'sit', dance: 'dance', coffee: 'drink', talk: 'wave', hug: 'blush', walk: 'walk', play: 'cheer' } as const;
+        if (spot) a.walkTo(spot.x, spot.y, { then: solo[it.id] });
+        a.nextThinkAt = this.time + 12;
+      }
+    }
+    this.renderer.dirty = true;
+    this.kick();
   }
 
   publishStatus(): void {

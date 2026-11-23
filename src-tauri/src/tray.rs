@@ -41,7 +41,7 @@ pub fn app_launch_args() -> Vec<String> {
 }
 
 pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "open", "Open Together", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "Open Bello Together", true, None::<&str>)?;
     let show = MenuItem::with_id(app, "show", "Show characters", true, None::<&str>)?;
     let hide = MenuItem::with_id(app, "hide", "Hide characters", true, None::<&str>)?;
     let pause = MenuItem::with_id(app, "pause", "Pause / resume", true, None::<&str>)?;
@@ -68,13 +68,29 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     .collect::<tauri::Result<Vec<_>>>()?;
     let game_refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = game_items.iter().map(|i| i as _).collect();
     let games = Submenu::with_items(app, "Play a game", true, &game_refs)?;
+    let scene_items = [
+        ("scene:none", "No scene (free)"),
+        ("scene:bedroom", "Bedroom"),
+        ("scene:coffee-shop", "Coffee shop"),
+        ("scene:park", "Park"),
+        ("scene:beach", "Beach"),
+        ("scene:rainy-window", "Rainy window"),
+        ("scene:night-sky", "Night sky"),
+        ("scene:cozy-room", "Cozy room"),
+        ("scene:valentine", "Valentine's room"),
+    ]
+    .iter()
+    .map(|(id, label)| MenuItem::with_id(app, *id, *label, true, None::<&str>))
+    .collect::<tauri::Result<Vec<_>>>()?;
+    let scene_refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = scene_items.iter().map(|i| i as _).collect();
+    let scenes = Submenu::with_items(app, "Scene", true, &scene_refs)?;
     let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Together", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Bello Together", true, None::<&str>)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
     let menu = Menu::with_items(
         app,
-        &[&open, &sep1, &show, &hide, &pause, &who, &activities, &games, &sep2, &settings, &quit],
+        &[&open, &sep1, &show, &hide, &pause, &who, &scenes, &activities, &games, &sep2, &settings, &quit],
     )?;
 
     // macOS tints a black template image to match the menu bar; Windows shows the icon as-is,
@@ -86,7 +102,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     TrayIconBuilder::with_id("together")
         .icon(icon)
         .icon_as_template(template)
-        .tooltip("Together Desktop")
+        .tooltip("Bello Together")
         .menu(&menu)
         .show_menu_on_left_click(true)
         .on_menu_event(|app, event| {
@@ -104,7 +120,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                 }
                 "quit" => app.exit(0),
                 other => {
-                    if other.starts_with("show:") {
+                    if other.starts_with("show:") || other.starts_with("scene:") {
                         show_world(app);
                         let _ = app.emit_to(WORLD, "together://command", other);
                     } else if let Some(game) = other.strip_prefix("game:") {

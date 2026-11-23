@@ -2,7 +2,8 @@ import { type Appearance, BASE_APPEARANCE } from './appearance';
 
 // Starting points only. The editor lets the user change every field; nothing is locked to a template.
 
-export const DEMO_A: Appearance = {
+/** Bello — the creator's own character, shipped with every install. */
+export const BELLO: Appearance = {
   ...BASE_APPEARANCE,
   faceShape: 'square',
   skin: '#e8b088',
@@ -53,8 +54,8 @@ export interface Template {
 }
 
 export const TEMPLATES: Template[] = [
+  { id: 'bello', label: 'Bello ✦', appearance: BELLO },
   { id: 'blank', label: 'Blank base', appearance: BASE_APPEARANCE },
-  { id: 'hoodie', label: 'Hoodie & sneakers', appearance: DEMO_A },
   { id: 'flower', label: 'Flower & dress', appearance: DEMO_B },
   {
     id: 'cozy',
@@ -90,3 +91,6 @@ export const TEMPLATES: Template[] = [
     },
   },
 ];
+
+/** Credit line shown across the app. */
+export const MADE_BY = 'Bello';

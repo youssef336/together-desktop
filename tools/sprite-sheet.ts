@@ -6,7 +6,7 @@ import { composeCharacter } from '../src/pixel/compose';
 import { SPRITE_H, SPRITE_W } from '../src/pixel/layout';
 import { pose, type Pose } from '../src/pixel/pose';
 import { encodePng } from './png';
-import { DEMO_A, DEMO_B } from '../src/domain/templates';
+import { BELLO, DEMO_B } from '../src/domain/templates';
 
 const SCALE = 4;
 const POSES: Pose[] = [
@@ -25,7 +25,7 @@ const POSES: Pose[] = [
 
 let seed = 7;
 const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-const chars: Appearance[] = [DEMO_A, DEMO_B, BASE_APPEARANCE];
+const chars: Appearance[] = [BELLO, DEMO_B, BASE_APPEARANCE];
 for (let i = 0; i < 5; i++) chars.push(randomizeAppearance(BASE_APPEARANCE, undefined, rnd));
 
 const W = POSES.length * SPRITE_W * SCALE;

@@ -162,6 +162,7 @@ function Welcome({ hasCharacters }: { hasCharacters: boolean }) {
         </div>
       </div>
       <div>
+        <p className="font-pixel text-sm text-rose">Bello Together</p>
         <h1 className="font-pixel text-4xl">Let’s build your little world</h1>
         <p className="mt-2 max-w-lg text-ink-soft">
           Design yourself, then your partner — every hair, outfit and quirk. Then they move onto your desktop and live there together.

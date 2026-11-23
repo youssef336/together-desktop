@@ -3,7 +3,7 @@ import { BASE_APPEARANCE, randomizeAppearance } from '../domain/appearance';
 import { fillTokens, pickExchange } from '../domain/dialogue';
 import { createCharacter, createCouple, exportCharacter, importCharacter } from '../domain/factory';
 import { PERSONALITY_PRESETS } from '../domain/personality';
-import { DEMO_A, DEMO_B } from '../domain/templates';
+import { BELLO, DEMO_B } from '../domain/templates';
 import { composeCharacter } from '../pixel/compose';
 import { pose } from '../pixel/pose';
 import { ACTIVITIES } from './activities';
@@ -17,7 +17,7 @@ const seeded = (seed = 1) => () => ((seed = (seed * 16807) % 2147483647) / 21474
 
 describe('pixel composer', () => {
   it('draws every clip frame of every template without throwing and with pixels inside the sprite', () => {
-    for (const a of [BASE_APPEARANCE, DEMO_A, DEMO_B]) {
+    for (const a of [BASE_APPEARANCE, BELLO, DEMO_B]) {
       for (const clip of ALL_CLIPS) {
         for (const f of clip.frames) {
           const box = composeCharacter(a, f.pose).bounds();
@@ -136,7 +136,7 @@ describe('activities', () => {
 
   for (const def of Object.values(ACTIVITIES)) {
     it(`${def.id} runs to completion and leaves both characters free`, () => {
-      const a = new Actor(createCharacter('A', DEMO_A), 200, 900);
+      const a = new Actor(createCharacter('A', BELLO), 200, 900);
       const b = new Actor(createCharacter('B', DEMO_B), 900, 900);
       const st = stage();
       const run = new ActivityRunner(def, { initiator: a, partner: b, stage: st });

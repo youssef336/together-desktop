@@ -91,6 +91,14 @@ export function SettingsPage() {
       </Card>
 
       <Card>
+        <h2 className="mb-1 font-pixel text-xl">About</h2>
+        <p>
+          <b className="font-pixel">Bello Together</b> v{__APP_VERSION__} — made with <span className="text-rose">♥</span> by <b className="font-pixel">Bello</b>.
+        </p>
+        <p className="text-sm text-ink-soft">A little world for the two of you.</p>
+      </Card>
+
+      <Card>
         <h2 className="mb-2 font-pixel text-xl">Privacy</h2>
         <ul className="mb-4 list-disc pl-5 text-sm text-ink-soft">
           <li>No account, no cloud, no analytics. Everything is a local file on this computer.</li>

@@ -1,12 +1,18 @@
-# Together Desktop
+# Bello Together
 
-**A little world for the two of you.**
+**A little world for the two of you** — made by Bello.
 
 Design yourself and your partner as pixel characters, then let them live on your desktop: they idle, wander, sit together, share coffee, hug, dance, play rock-paper-scissors, nap, and talk in little speech bubbles — while you keep working.
 
 ![Every character is drawn from its parts, in every pose](docs/sprites.png)
 
 *Each row is a different character, each column a pose (idle, breathing, walking, waving, cheering, hugging, holding a cup, sipping, sitting, surprised). None of it is a static image: the art is generated from the character's parts, so every animation fits every design.*
+
+## New in v0.3 — scenes
+
+![The eight scenes](docs/scenes.png)
+
+Give them a little room on your desktop: bedroom, coffee shop, park, beach, rainy window, night sky, cozy room or Valentine's room. Rain falls, stars twinkle, the fire flickers. Click the furniture and they use it — nap on the bed, sit on the sofa, coffee at the table, dance by the radio, switch the lamp, water the plant. Drag the scene anywhere; drag its corner to make it bigger or smaller.
 
 ## New in v0.2 — play with them
 

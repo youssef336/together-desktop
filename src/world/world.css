@@ -177,3 +177,12 @@ body {
 .td-choice-input:focus {
   border-color: #e8707f;
 }
+
+.td-menu-credit {
+  margin-top: 4px;
+  padding: 4px 8px 0;
+  border-top: 2px dashed #e9d9cd;
+  font-size: 11px;
+  color: #b49aa8;
+  text-align: right;
+}

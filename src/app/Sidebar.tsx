@@ -1,5 +1,6 @@
 import { useApp, type View } from '../stores/app-store';
 import { ACTIVITIES } from '../engine/activities';
+import { MADE_BY } from '../domain/templates';
 
 const NAV: { view: View['name']; label: string; icon: string }[] = [
   { view: 'home', label: 'Home', icon: '⌂' },
@@ -20,8 +21,9 @@ export function Sidebar() {
   return (
     <nav className="flex w-60 shrink-0 flex-col border-r-2 border-line bg-sunk/60 px-4 py-6">
       <div className="mb-8 px-2">
-        <p className="font-pixel text-2xl leading-none">Together</p>
-        <p className="mt-1 text-xs text-ink-soft">A little world for the two of you.</p>
+        <p className="font-pixel text-5xl leading-none tracking-wide text-rose [text-shadow:3px_3px_0_var(--color-ink)]">{MADE_BY}</p>
+        <p className="mt-1.5 font-pixel text-xl leading-none">Together</p>
+        <p className="mt-1.5 text-xs text-ink-soft">A little world for the two of you.</p>
       </div>
       <ul className="flex flex-col gap-1">
         {NAV.map((n) => (
@@ -56,6 +58,9 @@ export function Sidebar() {
                 : 'Hanging out'}
         </p>
       </div>
+      <p className="mt-3 px-1 text-center font-pixel text-[11px] text-ink-soft">
+        Made with <span className="text-rose">♥</span> by {MADE_BY}
+      </p>
     </nav>
   );
 }

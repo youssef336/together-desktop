@@ -5,7 +5,7 @@ import { DEFAULT_SETTINGS } from '../domain/models';
 import type { ActivityId } from '../domain/personality';
 import { EVENTS, launchArgs, send, world, type WorldStatus } from '../platform/bridge';
 import { createCharacter, createCouple } from '../domain/factory';
-import { DEMO_A, DEMO_B } from '../domain/templates';
+import { BELLO, DEMO_B } from '../domain/templates';
 
 export type View =
   | { name: 'home' }
@@ -70,7 +70,7 @@ export const useApp = create<AppState>((set, get) => ({
       set({ characters, couples, presets, settings, events, ready: true, error: null });
       // `--demo` on an empty install: a sample couple, so a fresh machine (or CI) shows them right away.
       if (characters.length === 0 && (await launchArgs()).includes('--demo')) {
-        const a = { ...createCharacter('Sami', DEMO_A), nickname: 'Sami' };
+        const a = { ...createCharacter('Bello', BELLO), nickname: 'Bello' };
         const b = { ...createCharacter('Lina', DEMO_B), nickname: 'Lina' };
         await get().saveCharacter(a);
         await get().saveCharacter(b);

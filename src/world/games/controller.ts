@@ -103,7 +103,6 @@ export class GameController {
   /** Stopped early: no score, no record. */
   stop(): void {
     if (!this.w.game) return;
-    void native.log(`game stop ${this.gameId} ${new Error().stack}`);
     this.w.game.dispose?.();
     this.cleanup();
     this.hud.hide();
