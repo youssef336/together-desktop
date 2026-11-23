@@ -43,7 +43,7 @@ export function ScenesPage() {
             max={90}
             value={Math.round((s.sceneScale ?? s.scale) * 10)}
             onChange={(v) => void save({ sceneScale: v / 10 })}
-            hint="Or drag the scene's corner on the desktop."
+            hint="Or drag any corner of the scene on the desktop."
           />
         </div>
         <div className="min-w-56">

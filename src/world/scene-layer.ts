@@ -8,6 +8,8 @@ import { FLOOR_Y, type Placed, SCENE_H, SCENE_MAP, SCENE_W, type SceneDef, spotF
  * The optional scene on the desktop: where it sits, what it looks like right now, which object
  * is under the cursor, and where an activity should happen inside it.
  */
+export type Corner = 'nw' | 'ne' | 'sw' | 'se';
+
 export class SceneLayer {
   def: SceneDef | null = null;
   light = true;
@@ -49,12 +51,21 @@ export class SceneLayer {
     this.rect = { x: Math.max(0, Math.min(view.w - w, x)), y: Math.max(0, Math.min(view.h - h, y)), w, h };
   }
 
-  /** Corner grip for resizing (bottom-right). */
-  handleAt(x: number, y: number): boolean {
-    if (!this.active) return false;
+  /** Which corner (if any) is under the point — any of the four resizes the scene. */
+  handleAt(x: number, y: number): Corner | null {
+    if (!this.active) return null;
     const r = this.rect;
-    const g = Math.max(14, this.scale * 6);
-    return x >= r.x + r.w - g && x <= r.x + r.w + 4 && y >= r.y + r.h - g && y <= r.y + r.h + 4;
+    const g = Math.max(18, this.scale * 8);
+    const pad = 6;
+    const west = x >= r.x - pad && x <= r.x + g;
+    const east = x >= r.x + r.w - g && x <= r.x + r.w + pad;
+    const north = y >= r.y - pad && y <= r.y + g;
+    const south = y >= r.y + r.h - g && y <= r.y + r.h + pad;
+    if (north && west) return 'nw';
+    if (north && east) return 'ne';
+    if (south && west) return 'sw';
+    if (south && east) return 'se';
+    return null;
   }
 
   /** Free move / resize while dragging; returns the new rect. */
@@ -64,11 +75,15 @@ export class SceneLayer {
     this.layout(view);
   }
 
-  resizeTo(scale: number, view: { w: number; h: number }): void {
+  /** Resize from a corner; the opposite corner (`anchor`, in screen px) stays where it is. */
+  resizeTo(scale: number, view: { w: number; h: number }, corner: Corner, anchor: { x: number; y: number }): void {
     this.scale = Math.max(SceneLayer.MIN, Math.min(SceneLayer.MAX, scale));
-    // Keep the top-left corner where it is while the bottom-right follows the mouse.
-    this.fx = this.rect.x / view.w;
-    this.fy = this.rect.y / view.h;
+    const w = Math.round(SCENE_W * this.scale);
+    const h = Math.round(SCENE_H * this.scale);
+    const x = corner === 'nw' || corner === 'sw' ? anchor.x - w : anchor.x;
+    const y = corner === 'nw' || corner === 'ne' ? anchor.y - h : anchor.y;
+    this.fx = x / view.w;
+    this.fy = y / view.h;
     this.layout(view);
     this.paintedAt = -1;
   }
@@ -109,14 +124,9 @@ export class SceneLayer {
   draw(ctx: CanvasRenderingContext2D, t: number): Box | null {
     if (!this.def || !this.canvas) return null;
     if (this.paintedAt < 0) this.tick(t);
+    // No drawn grip: every corner resizes, and the cursor shows it on hover.
     const box = this.canvas.blit(ctx, this.rect.x, this.rect.y, this.scale);
-    // Resize grip: three little diagonal steps in the bottom-right corner.
-    const k = Math.max(2, Math.round(this.scale * 0.8));
-    const right = this.rect.x + this.rect.w - k * 2;
-    const bottom = this.rect.y + this.rect.h - k * 2;
-    ctx.fillStyle = 'rgba(58,42,53,0.75)';
-    for (let i = 0; i < 3; i++) for (let j = 0; j <= i; j++) ctx.fillRect(right - j * k * 1.5, bottom - (i - j) * k * 1.5, k, k);
-    return box;
+    return { x: box.x - 6, y: box.y - 6, w: box.w + 12, h: box.h + 12 };
   }
 
   contains(x: number, y: number): boolean {

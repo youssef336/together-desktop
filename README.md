@@ -12,7 +12,7 @@ Design yourself and your partner as pixel characters, then let them live on your
 
 ![The eight scenes](docs/scenes.png)
 
-Give them a little room on your desktop: bedroom, coffee shop, park, beach, rainy window, night sky, cozy room or Valentine's room. Rain falls, stars twinkle, the fire flickers. Click the furniture and they use it — nap on the bed, sit on the sofa, coffee at the table, dance by the radio, switch the lamp, water the plant. Drag the scene anywhere; drag its corner to make it bigger or smaller.
+Give them a little room on your desktop: bedroom, coffee shop, park, beach, rainy window, night sky, cozy room or Valentine's room. Rain falls, stars twinkle, the fire flickers. Click the furniture and they use it — nap on the bed, sit on the sofa, coffee at the table, dance by the radio, switch the lamp, water the plant. Drag the scene anywhere; drag any of its corners to make it bigger or smaller.
 
 ## New in v0.2 — play with them
 

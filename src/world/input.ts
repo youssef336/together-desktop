@@ -8,6 +8,7 @@ import type { GameController } from './games/controller';
 import type { Interactions } from './interact';
 import type { ContextMenu } from './menu';
 import type { World } from './runtime';
+import type { Corner } from './scene-layer';
 
 const DRAG_START_PX = 5;
 const DOUBLE_CLICK_MS = 320;
@@ -20,7 +21,7 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
   let lastClick: { id: string; at: number; timer: number } | null = null;
   /** Moving or resizing the scene. */
   let sceneDrag: {
-    kind: 'move' | 'resize';
+    kind: 'move' | Corner;
     x: number;
     y: number;
     offX: number;
@@ -29,7 +30,8 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
     obj: ReturnType<typeof w.scene.objectAt>;
     startScale: number;
     startW: number;
-    rect: { x: number; y: number };
+    startH: number;
+    anchor: { x: number; y: number };
     at: number;
   } | null = null;
   /** A drag needs the button actually held a moment — quick clicks never move things. */
@@ -51,10 +53,12 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
     if (!actor) {
       if (!w.scene.contains(e.clientX, e.clientY) && !w.scene.handleAt(e.clientX, e.clientY)) return;
       // Press inside the scene: a click uses the object under it; a drag moves the scene;
-      // a drag from the bottom-right grip resizes it.
+      // a drag from any corner resizes it (the opposite corner stays put).
       canvas.setPointerCapture(e.pointerId);
+      const corner = w.scene.handleAt(e.clientX, e.clientY);
+      const r = w.scene.rect;
       sceneDrag = {
-        kind: w.scene.handleAt(e.clientX, e.clientY) ? 'resize' : 'move',
+        kind: corner ?? 'move',
         x: e.clientX,
         y: e.clientY,
         offX: w.scene.rect.x - e.clientX,
@@ -62,8 +66,9 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
         moved: false,
         obj: w.scene.objectAt(e.clientX, e.clientY),
         startScale: w.scene.scale,
-        startW: w.scene.rect.w,
-        rect: { x: w.scene.rect.x, y: w.scene.rect.y },
+        startW: r.w,
+        startH: r.h,
+        anchor: { x: corner === 'nw' || corner === 'sw' ? r.x + r.w : r.x, y: corner === 'nw' || corner === 'ne' ? r.y + r.h : r.y },
         at: performance.now(),
       };
       return;
@@ -73,6 +78,11 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
   });
 
   canvas.addEventListener('pointermove', (e) => {
+    if (!sceneDrag && !down) {
+      // Corners are invisible handles: show a resize cursor over them.
+      const c = w.game ? null : w.scene.handleAt(e.clientX, e.clientY);
+      canvas.style.cursor = c === 'nw' || c === 'se' ? 'nwse-resize' : c ? 'nesw-resize' : '';
+    }
     if (games.pointerMove(e.clientX, e.clientY)) return;
     if (sceneDrag) {
       if (!sceneDrag.moved && (Math.hypot(e.clientX - sceneDrag.x, e.clientY - sceneDrag.y) < DRAG_START_PX || !isRealDrag(e, sceneDrag.at))) return;
@@ -84,8 +94,12 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
       const before = { ...w.scene.rect, floor: w.scene.floorY };
       if (sceneDrag.kind === 'move') w.scene.moveTo(e.clientX + sceneDrag.offX, e.clientY + sceneDrag.offY, view);
       else {
-        const width = Math.max(40, sceneDrag.startW + (e.clientX - sceneDrag.x));
-        w.scene.resizeTo((sceneDrag.startScale * width) / sceneDrag.startW, view);
+        const d = sceneDrag;
+        const dx = (e.clientX - d.x) * (d.kind === 'nw' || d.kind === 'sw' ? -1 : 1);
+        const dy = (e.clientY - d.y) * (d.kind === 'nw' || d.kind === 'ne' ? -1 : 1);
+        // Follow whichever direction the mouse pulls more, so diagonal drags feel natural.
+        const ratio = Math.max(0.1, ((d.startW + dx) / d.startW + (d.startH + dy) / d.startH) / 2);
+        w.scene.resizeTo(d.startScale * ratio, view, d.kind as Corner, d.anchor);
       }
       // They live in it: carry them along, keeping their place on the floor.
       for (const a of w.actors) {
