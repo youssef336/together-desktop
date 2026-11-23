@@ -8,7 +8,9 @@ import { Actor } from '../engine/actor';
 import { CoupleScheduler } from '../engine/scheduler';
 import { store } from '../data/store';
 import { EVENTS, send, world as native, type WorldStatus } from '../platform/bridge';
+import { applyMood, driftMood, MOOD_DEFAULT, MOOD_SAD, type MoodCause } from '../domain/mood';
 import { think } from './behavior';
+import type { Game } from './games/types';
 import { Particles } from './particles';
 import { Renderer } from './renderer';
 
@@ -33,6 +35,15 @@ export class World implements Stage {
   rnd = Math.random;
   /** Hover handler, installed by the input layer. */
   onCursor: (x: number, y: number) => void = () => {};
+  /** The mini game being played, if any (owned by GameController). */
+  game: Game | null = null;
+  onGameOver: () => void = () => {};
+  /** Called on every render so DOM bubbles can follow their character. */
+  onRender: () => void = () => {};
+  private comfortAt = 30;
+  private sides = new Map<string, 'a' | 'b'>();
+  private moodSavedAt = 0;
+  private moodDirty = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new Renderer(canvas, this);
@@ -61,7 +72,7 @@ export class World implements Stage {
       disabled: this.couple?.dialogue.disabledCategories ?? [],
       recent: this.recentLines,
       activity,
-      speaker: opener === this.actors[0] ? 'a' : 'b',
+      speaker: this.sides.get(opener.id) ?? 'a',
     });
     if (!line) return {};
     this.recentLines = [line.key, ...this.recentLines].slice(0, 12);
@@ -73,15 +84,37 @@ export class World implements Stage {
     this.particles.emit(kind, x, y, seconds);
   }
 
+  // ── Mood ───────────────────────────────────────────────────────────────
+  moodOf(actor: Actor): number {
+    return this.settings?.moods[actor.id] ?? MOOD_DEFAULT;
+  }
+  mood(actor: Actor, cause: MoodCause): void {
+    const before = this.moodOf(actor);
+    const after = applyMood(before, cause, actor.character.personality.shyness);
+    this.settings.moods = { ...this.settings.moods, [actor.id]: after };
+    this.moodDirty = true;
+    if (before >= MOOD_SAD && after < MOOD_SAD) this.effect('cloud', actor.x, actor.y - this.px(38), 3);
+    this.persistMoods(true);
+  }
+  private persistMoods(now = false): void {
+    if (!this.moodDirty || (!now && this.time - this.moodSavedAt < 120)) return;
+    this.moodDirty = false;
+    this.moodSavedAt = this.time;
+    void this.patchSettings({ moods: this.settings.moods });
+  }
+
   // ── Data ───────────────────────────────────────────────────────────────
   async load(): Promise<void> {
     const [settings, couples, characters] = await Promise.all([store.getSettings(), store.listCouples(), store.listCharacters()]);
     this.settings = settings;
     this.couple = couples.find((c) => c.id === settings.activeCoupleId) ?? couples[0] ?? null;
     const byId = new Map(characters.map((c) => [c.id, c]));
-    const chars = this.couple
-      ? [byId.get(this.couple.characterAId), byId.get(this.couple.characterBId)].filter((c): c is Character => !!c)
-      : [];
+    const pair = this.couple ? [byId.get(this.couple.characterAId), byId.get(this.couple.characterBId)] : [];
+    // "Who's out": both, or only one of them.
+    const visible = settings.show === 'a' ? pair.slice(0, 1) : settings.show === 'b' ? pair.slice(1, 2) : pair;
+    const chars = visible.filter((c): c is Character => !!c);
+    /** Couple index of each visible character (for dialogue openers). */
+    this.sides = new Map(chars.map((c) => [c.id, c.id === this.couple?.characterBId ? 'b' : 'a']));
     const previous = new Map(this.actors.map((a) => [a.id, a]));
     const { w, h } = this.renderer.view;
     this.actors = chars.map((c, i) => {
@@ -116,6 +149,16 @@ export class World implements Stage {
     await send(EVENTS.dataChanged, { from: 'world' });
     this.publishStatus();
     this.kick();
+  }
+
+  /** Who's out on the desktop. Reloads so the actors match. */
+  async setShow(show: WorldSettings['show']): Promise<void> {
+    if (this.runner) {
+      this.runner.finish();
+      this.runner = null;
+    }
+    await this.patchSettings({ show });
+    await this.load();
   }
 
   savePosition(actor: Actor): void {
@@ -182,7 +225,8 @@ export class World implements Stage {
     const affection = (this.actors[0]!.character.personality.affection + this.actors[1]!.character.personality.affection) / 2;
     this.momentAt = this.time + (70 + this.rnd() * 90) * (1.4 - affection / 200);
     if (this.couple.behavior.mode === 'stationary') return;
-    const pick = MOMENTS[Math.floor(this.rnd() * MOMENTS.length)]!;
+    const spontaneous = MOMENTS.filter((m) => m.id !== 'comfort');
+    const pick = spontaneous[Math.floor(this.rnd() * spontaneous.length)]!;
     if (pick.id === 'gift' && this.rnd() > 0.25) return; // gifts are rare
     this.startActivity(pick.id, undefined, 'auto');
   }
@@ -202,8 +246,10 @@ export class World implements Stage {
     const now = performance.now();
     const dt = Math.min(0.1, (now - this.last) / 1000);
     this.last = now;
-    if (!this.paused) this.update(dt);
+    if (this.game) this.updateGame(dt);
+    else if (!this.paused) this.update(dt);
     this.renderer.render();
+    this.onRender();
     window.clearTimeout(this.timer);
     this.timer = window.setTimeout(this.loop, this.nextDelay() * 1000);
   };
@@ -218,6 +264,7 @@ export class World implements Stage {
 
   private nextDelay(): number {
     const low = this.settings?.lowPerformance;
+    if (this.game) return low ? 1 / 30 : 1 / 60;
     if (this.paused) return 1;
     if (this.busy()) return low ? 1 / 15 : 1 / 30;
     const next = Math.min(...this.actors.map((a) => a.animator.nextChangeIn()), 0.5);
@@ -246,6 +293,7 @@ export class World implements Stage {
       if (this.time >= this.scheduler.nextAt) this.autoActivity();
       else if (this.time >= this.momentAt) this.moment();
     }
+    this.updateMoods(dt);
     const mode = this.couple?.behavior.mode ?? 'relaxed';
     for (const a of this.actors) {
       if (a.mode !== 'free' || !a.arrived || this.time < a.nextThinkAt) continue;
@@ -258,9 +306,58 @@ export class World implements Stage {
     }
   }
 
+  private updateGame(dt: number): void {
+    this.time += dt;
+    for (const a of this.actors) {
+      a.animator.update(dt);
+      if (a.bubble) {
+        a.bubble.ttl -= dt;
+        if (a.bubble.ttl <= 0) a.bubble = null;
+      }
+    }
+    this.game?.update(dt);
+    if (this.particles.active) this.particles.update(dt, this.scale, this.rnd);
+    this.renderer.dirty = true;
+    if (this.game?.over) this.onGameOver();
+  }
+
+  private moodTick = 0;
+  /** Drift, sad faces, and the partner coming to comfort a sad one. */
+  private updateMoods(dt: number): void {
+    this.moodTick += dt;
+    if (this.moodTick >= 10) {
+      const moods = { ...this.settings.moods };
+      for (const a of this.actors) {
+        const m = moods[a.id] ?? MOOD_DEFAULT;
+        const next = driftMood(m, this.moodTick);
+        if (next !== m) {
+          moods[a.id] = next;
+          this.moodDirty = true;
+        }
+      }
+      this.settings.moods = moods;
+      this.moodTick = 0;
+      this.persistMoods();
+    }
+    for (const a of this.actors) {
+      const sad = this.moodOf(a) < MOOD_SAD;
+      if (a.mode !== 'free') continue;
+      if (sad && a.animator.clip === 'idle') a.animator.play('sadIdle', { force: true, then: 'sadIdle' });
+      else if (!sad && a.animator.clip === 'sadIdle') a.animator.play('idle', { force: true });
+    }
+    if (this.runner || this.actors.length < 2 || this.time < this.comfortAt) return;
+    const sadOne = this.actors.find((a) => this.moodOf(a) < MOOD_SAD);
+    const other = this.actors.find((a) => a !== sadOne);
+    if (sadOne && other && this.actors.every((a) => a.mode === 'free') && this.moodOf(other) >= MOOD_SAD) {
+      this.comfortAt = this.time + 120;
+      this.startActivity('comfort', other.id, 'auto');
+    }
+  }
+
   publishStatus(): void {
     const status: WorldStatus = {
       activity: (this.runner?.def.id as ActivityId) ?? null,
+      game: this.game?.id ?? null,
       step: this.runner?.stepName ?? '',
       paused: !!this.settings?.paused,
       visible: !this.settings?.hidden,

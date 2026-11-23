@@ -53,6 +53,18 @@ Legend: `[x]` done and verified · `[~]` done, not yet verified on every platfor
 - [x] Scheduler: personality, favourites, mode, cooldowns, history, time of day
 - [ ] Chase / catch / jump games
 
+## Phase 6b — Play together (v0.2)
+- [x] Who's out: both, or only one of the couple (Home, right-click menu, tray); solo mode turns couple features off cleanly
+- [x] Mini games on the desktop: ☕ Coffee Catch (mouse / ←→, combos, hearts, broken mugs), 💗 Heart Pop (click hearts, avoid gray), 🪞 Copy Me (Simon), ✊ Rock Paper Scissors vs you (best of 3)
+- [x] Game controller: capture mode + dim, keyboard focus, Esc / Stop, compact result bar with ✕, high scores, events
+- [x] Choice bubbles: they ask, you answer Yes / No in their bubble; answers change words, animation, mood and can start an activity or a game
+- [x] Your own questions (Couple page) with “No hurts” option
+- [x] Mood (0–100) per character: answers, games, being tossed around, ignoring a question; drifts back to calm; sad face + cloud; the partner comes to comfort a sad one (hug + hearts)
+- [x] Rename on the desktop (right-click → Rename) and name fields at the top of the editor
+- [x] Verified on macOS: tray submenus, Coffee Catch, right-click menu, question bubble → answer → pout + reply
+- [ ] More games: chase / tag, “feed them” (drag snacks to them), memory cards
+- [ ] Game sounds (off by default)
+
 ## Phase 7 — Dialogue & personality
 - [x] Pixel speech bubbles: wrap, size to text, stay on screen, stack, fade
 - [x] Categories: casual, romantic, funny, teasing, supportive, activity, thoughts, reactions, greetings, morning, night, special

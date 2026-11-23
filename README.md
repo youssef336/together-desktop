@@ -8,6 +8,14 @@ Design yourself and your partner as pixel characters, then let them live on your
 
 *Each row is a different character, each column a pose (idle, breathing, walking, waving, cheering, hugging, holding a cup, sipping, sitting, surprised). None of it is a static image: the art is generated from the character's parts, so every animation fits every design.*
 
+## New in v0.2 — play with them
+
+- **Who's out**: both of them, or just one (Home, right-click, or the tray).
+- **Mini games on your desktop**: ☕ *Coffee Catch* (catch falling coffee with your character), 💗 *Heart Pop* (pop the hearts they throw, not the gray ones), 🪞 *Copy Me* (repeat their dance), ✊ *Rock Paper Scissors* against you. High scores are kept. Esc stops.
+- **They ask you things**: click them and sometimes a bubble pops up — *“Do you love me?” Yes / No*. They react, and a “yes” can start a coffee date or a game. Add your own questions on the Couple page.
+- **Mood**: each one has feelings. Hurtful answers, being tossed around or ignored make them sad (sad face, a little rain cloud); games and kind answers cheer them up — and if one is sad, the other walks over to comfort them.
+- **Rename them right on the desktop** (right-click → Rename).
+
 ## What works today (v0.1 — the MVP)
 
 - **Create your character, then your partner** — two steps, each fully independent (the partner is never a copy).

@@ -3,7 +3,7 @@ import type { ActivityId } from '../domain/personality';
 import type { Actor } from './actor';
 import type { ClipId } from './clips';
 
-export type EffectKind = 'heart' | 'hearts' | 'steam' | 'zzz' | 'note' | 'sparkle' | 'gift' | 'sweat';
+export type EffectKind = 'heart' | 'hearts' | 'steam' | 'zzz' | 'note' | 'sparkle' | 'gift' | 'sweat' | 'cloud' | 'star';
 
 /** What an activity may ask of the world. Implemented by the world runtime (and by tests). */
 export interface Stage {
@@ -15,6 +15,8 @@ export interface Stage {
   exchange(category: DialogueCategory, opener: Actor, listener: Actor, activity?: ActivityId): { first?: string; reply?: string };
   effect(kind: EffectKind, x: number, y: number, seconds?: number): void;
   rnd(): number;
+  /** Optional: nudge a character's mood (the world implements it; tests may not). */
+  mood?(actor: Actor, cause: 'comforted'): void;
 }
 
 export interface Ctx {
@@ -30,7 +32,16 @@ export interface Step {
   update(ctx: Ctx, dt: number): boolean;
 }
 
-export type MomentId = 'wave-at' | 'gift' | 'glance';
+export type MomentId = 'wave-at' | 'gift' | 'glance' | 'comfort';
+
+/** The partner's comfort lands: mood goes up. */
+export const cheerUp = (): Step => ({
+  name: 'cheer-up',
+  update: ({ partner, stage }) => {
+    stage.mood?.(partner, 'comforted');
+    return true;
+  },
+});
 
 export const wait = (sec: number, name = 'wait'): Step => {
   let t = 0;

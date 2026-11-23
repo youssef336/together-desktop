@@ -17,8 +17,10 @@ export class Renderer {
   dirty = true;
   private prev: Box[] = [];
   private lastHit = '';
-  /** Extra interactive regions (the context menu). */
-  extraHit: HitRect[] = [];
+  /** Extra interactive regions by owner (menu, choice bubble, game HUD). */
+  readonly extraHit = new Map<string, HitRect[]>();
+  /** True while a game wants every click in the window. */
+  captureAll = false;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -47,7 +49,8 @@ export class Renderer {
     const { ctx, world } = this;
     for (const b of this.prev) ctx.clearRect(b.x, b.y, b.w, b.h);
     const drawn: Box[] = [];
-    const hits: HitRect[] = [...this.extraHit];
+    const hits: HitRect[] = [...this.extraHit.values()].flat();
+    if (this.captureAll) hits.push({ x: 0, y: 0, w: this.view.w, h: this.view.h });
     const s = world.scale;
 
     if (!world.settings?.hidden) {
@@ -70,6 +73,7 @@ export class Renderer {
         ctx.restore();
         drawn.push(pad(box, 2));
       }
+      if (world.game?.draw) drawn.push(...world.game.draw(ctx));
       const bubbles: Box[] = [];
       for (const a of actors) {
         if (!a.bubble) continue;
@@ -93,7 +97,9 @@ export class Renderer {
   }
 
   private reportHits(hits: HitRect[]): void {
-    const rounded = hits.map((h) => ({ x: Math.round(h.x), y: Math.round(h.y), w: Math.round(h.w), h: Math.round(h.h) }));
+    // A little margin so a quick move-and-click still lands (the Rust loop polls the cursor).
+    const m = 10;
+    const rounded = hits.map((h) => ({ x: Math.round(h.x - m), y: Math.round(h.y - m), w: Math.round(h.w + 2 * m), h: Math.round(h.h + 2 * m) }));
     const json = JSON.stringify(rounded);
     if (json === this.lastHit) return;
     this.lastHit = json;

@@ -36,6 +36,34 @@ export const BITMAPS = {
     rows: ['.o.', 'oBo', 'oBo', '.o.'],
     palette: { o: OUT, B: '#9fd0d8' },
   },
+  cloud: {
+    rows: ['...ooo....', '.oooGGoo..', 'oGGGGGGGoo', 'oGGGGGGGGo', '.oooooooo.', '..B..B..B.', '.B..B..B..'],
+    palette: { o: OUT, G: '#c9c4d6', B: '#9fd0d8' },
+  },
+  cup: {
+    rows: ['.W..W.', '..W..W', 'oooooo.', 'oCCCCo.', 'oWWWWooo', 'oWWWWo.o', 'oWWWWooo', '.oooo..'],
+    palette: { o: OUT, W: '#fbf6ee', C: '#6b4226' },
+  },
+  goldCup: {
+    rows: ['.Y..Y.', '..Y..Y', 'oooooo.', 'oCCCCo.', 'oYYYYooo', 'oYWYYo.o', 'oYYYYooo', '.oooo..'],
+    palette: { o: OUT, Y: '#f2c94c', W: '#fffbe6', C: '#6b4226' },
+  },
+  brokenMug: {
+    rows: ['oooo.oo', 'oSSo.oo', 'oSSSoSo', 'oSSoSSo', '.oSSSSo', '.oooooo'],
+    palette: { o: OUT, S: '#8c8aa0' },
+  },
+  grayHeart: {
+    rows: ['.oo.oo.', 'oGGoGGo', 'oGGoGGo', 'oGGGoGo', '.oGoGo.', '..oGo..', '...o...'],
+    palette: { o: OUT, G: '#8c8aa0' },
+  },
+  goldHeart: {
+    rows: ['.oo.oo.', 'oYYoYYo', 'oYWYYYo', 'oYYYYYo', '.oYYYo.', '..oYo..', '...o...'],
+    palette: { o: OUT, Y: '#f2c94c', W: '#fffbe6' },
+  },
+  star: {
+    rows: ['...o...', '..oYo..', 'ooYYYoo', 'oYYWYYo', '.oYYYo.', 'oYo.oYo', 'oo...oo'],
+    palette: { o: OUT, Y: '#f2c94c', W: '#fffbe6' },
+  },
 } satisfies Record<string, Bitmap>;
 
 export type BitmapId = keyof typeof BITMAPS;

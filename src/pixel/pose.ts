@@ -13,8 +13,8 @@ export type ArmPose =
   | 'cup'
   | 'cupUp'
   | 'reach';
-export type EyePose = 'open' | 'closed' | 'happy' | 'wide';
-export type MouthPose = 'default' | 'open' | 'smile';
+export type EyePose = 'open' | 'closed' | 'happy' | 'wide' | 'sad';
+export type MouthPose = 'default' | 'open' | 'smile' | 'sad';
 
 export interface Pose {
   legs: LegPose;

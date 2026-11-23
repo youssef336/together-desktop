@@ -6,6 +6,7 @@ import {
   faceEachOther,
   meet,
   play,
+  cheerUp,
   rockPaperScissors,
   say,
   walkTogether,
@@ -134,5 +135,22 @@ export const MOMENTS: ActivityDef[] = [
   {
     id: 'glance', label: 'Glance', emoji: '💗', cooldown: 150, description: 'They catch each other looking.',
     build: () => [faceEachOther(), play('blush', 'happy', 1.4), effect('heart', 'between', 1.6), wait(1)],
+  },
+  {
+    // Not random: the world starts it when one of them is sad. The initiator comforts the partner.
+    id: 'comfort', label: 'Comfort', emoji: '🫂', cooldown: 120, description: 'When one is sad, the other comes over to make it better.',
+    build: ({ stage }) => [
+      meet(11),
+      faceEachOther(),
+      say('initiator', ["Hey... I'm here.", 'Come here, you.', "Don't be sad ❤️", 'Who made you sad? 😠'][Math.floor(stage.rnd() * 4)]!),
+      wait(1.6),
+      play('hug', 'hug', 0.1),
+      effect('hearts', 'between', 3),
+      wait(3),
+      cheerUp(),
+      play('happy', 'blush', 1.4),
+      say('partner', 'Thank you... ❤️'),
+      wait(1.2),
+    ],
   },
 ];

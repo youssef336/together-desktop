@@ -14,6 +14,8 @@ export const EVENTS = {
   activity: 'together://activity',
   /** Commands for the world: toggle-pause | shown | hidden | reload. */
   command: 'together://command',
+  /** Start a mini game in the world (payload: { id, playerId? }). */
+  game: 'together://game',
   /** Ask the main window to show a page (payload: view id). */
   navigate: 'together://navigate',
   /** World → main: status line for the dashboard. */
@@ -23,6 +25,7 @@ export const EVENTS = {
 
 export interface WorldStatus {
   activity: ActivityId | null;
+  game: string | null;
   step: string;
   paused: boolean;
   visible: boolean;
@@ -61,6 +64,10 @@ export const world = {
   place: (index: number) => safeInvoke<void>('world_place', { index }),
   show: () => safeInvoke<void>('world_show'),
   hide: () => safeInvoke<void>('world_hide'),
+  /** Keyboard focus for games (the world never takes focus otherwise). */
+  focus: () => safeInvoke<void>('world_focus'),
+  /** Dev only: prints to the `tauri dev` terminal. */
+  log: (msg: string) => (import.meta.env.DEV ? safeInvoke<void>('world_log', { msg }) : Promise.resolve(undefined)),
 };
 
 /** Shows the main window, optionally on a page (e.g. `settings`, `editor:<id>`). */

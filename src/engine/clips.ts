@@ -21,7 +21,7 @@ export interface Clip {
 
 export const CLIP_IDS = [
   'idle', 'walk', 'run', 'sit', 'sleep', 'jump', 'wave', 'dance', 'hug', 'hold', 'drink',
-  'talk', 'happy', 'surprise', 'blush', 'dangle', 'land', 'cheer', 'think',
+  'talk', 'happy', 'surprise', 'blush', 'dangle', 'land', 'cheer', 'think', 'pout', 'sadIdle', 'catch',
 ] as const;
 export type ClipId = (typeof CLIP_IDS)[number];
 
@@ -104,6 +104,18 @@ const CLIPS: Clip[] = [
   {
     id: 'think', label: 'Look around', category: 'idle', fps: 3, loop: false, priority: 1,
     frames: [...times(3, f({ look: -1 })), f({ look: 0 }), ...times(3, f({ look: 1 })), f({ eyes: 'closed' }), f({})],
+  },
+  {
+    id: 'pout', label: 'Upset', category: 'reaction', fps: 3, loop: false, priority: 3,
+    frames: [...times(3, f({ eyes: 'sad', mouth: 'sad', look: -1 })), ...times(3, f({ eyes: 'closed', mouth: 'sad', bob: 1 })), ...times(2, f({ eyes: 'sad', mouth: 'sad' }))],
+  },
+  {
+    id: 'sadIdle', label: 'Sad idle', category: 'idle', fps: 2, loop: true, priority: 0,
+    frames: [...times(3, f({ eyes: 'sad', mouth: 'sad' })), ...times(3, f({ eyes: 'sad', mouth: 'sad', bob: 1 })), f({ eyes: 'closed', mouth: 'sad', bob: 1 })],
+  },
+  {
+    id: 'catch', label: 'Catch', category: 'move', fps: 10, loop: true, priority: 1,
+    frames: [f({ arms: 'up', legs: 'stepA', mouth: 'smile' }), f({ arms: 'up', bob: 1, mouth: 'smile' }), f({ arms: 'up', legs: 'stepB', mouth: 'smile' }), f({ arms: 'up', bob: 1, mouth: 'smile' })],
   },
 ];
 

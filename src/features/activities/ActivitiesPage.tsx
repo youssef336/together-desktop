@@ -4,6 +4,7 @@ import { ACTIVITIES, MOMENTS } from '../../engine/activities';
 import { useActiveCouple, useApp } from '../../stores/app-store';
 import { CharacterPreview } from '../../ui/CharacterPreview';
 import { Empty, Title } from '../../ui/controls';
+import { GamesGrid } from './GamesGrid';
 
 /** The clip each card previews — the heart of the activity. */
 const PREVIEW: Record<ActivityId, ClipId> = {
@@ -56,10 +57,13 @@ export function ActivitiesPage() {
               );
             })}
           </ul>
+          <h2 className="mt-8 mb-2 font-pixel text-xl">Mini games — play with them</h2>
+          <p className="mb-3 text-sm text-ink-soft">Coffee Catch and Heart Pop take over the screen until the round ends (Esc stops). Copy Me and Rock Paper Scissors happen in their speech bubbles.</p>
+          <GamesGrid />
           <h2 className="mt-8 mb-2 font-pixel text-xl">Little moments</h2>
           <p className="mb-3 text-sm text-ink-soft">These happen by themselves between activities — not too often, never the same one twice in a row.</p>
           <ul className="flex flex-wrap gap-2">
-            {MOMENTS.map((m) => (
+            {MOMENTS.filter((m) => m.id !== 'comfort').map((m) => (
               <li key={m.id} className="rounded-xl border-2 border-line bg-card px-3 py-2 text-sm">
                 {m.emoji} {m.label} — <span className="text-ink-soft">{m.description}</span>
               </li>

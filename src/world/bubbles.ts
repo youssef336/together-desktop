@@ -21,8 +21,11 @@ export function bubbleFont(s: number): { font: string; size: number } {
   return { font: `${size}px "Pixelify Sans", ui-rounded, system-ui, sans-serif`, size };
 }
 
+/** Breaks the pixel font's f-ligatures with a zero-width non-joiner. */
+const noLigatures = (t: string) => t.replace(/f(?=[filt])/g, 'f\u200c');
+
 function wrap(ctx: CanvasRenderingContext2D, text: string, max: number): string[] {
-  const words = text.split(/\s+/);
+  const words = noLigatures(text).split(/\s+/);
   const lines: string[] = [];
   let line = '';
   for (const w of words) {

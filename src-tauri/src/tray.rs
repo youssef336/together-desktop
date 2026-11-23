@@ -45,13 +45,30 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         .collect::<tauri::Result<Vec<_>>>()?;
     let refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = items.iter().map(|i| i as _).collect();
     let activities = Submenu::with_items(app, "Start activity", true, &refs)?;
+    let who_items = [("show:both", "Both of them"), ("show:a", "Only the first"), ("show:b", "Only the second")]
+        .iter()
+        .map(|(id, label)| MenuItem::with_id(app, *id, *label, true, None::<&str>))
+        .collect::<tauri::Result<Vec<_>>>()?;
+    let who_refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = who_items.iter().map(|i| i as _).collect();
+    let who = Submenu::with_items(app, "Who's out", true, &who_refs)?;
+    let game_items = [
+        ("game:coffee-catch", "Coffee Catch"),
+        ("game:heart-pop", "Heart Pop"),
+        ("game:copy-me", "Copy Me"),
+        ("game:rps", "Rock Paper Scissors"),
+    ]
+    .iter()
+    .map(|(id, label)| MenuItem::with_id(app, *id, *label, true, None::<&str>))
+    .collect::<tauri::Result<Vec<_>>>()?;
+    let game_refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = game_items.iter().map(|i| i as _).collect();
+    let games = Submenu::with_items(app, "Play a game", true, &game_refs)?;
     let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit Together", true, None::<&str>)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
     let menu = Menu::with_items(
         app,
-        &[&open, &sep1, &show, &hide, &pause, &activities, &sep2, &settings, &quit],
+        &[&open, &sep1, &show, &hide, &pause, &who, &activities, &games, &sep2, &settings, &quit],
     )?;
 
     let icon = Image::from_bytes(include_bytes!("../icons/tray.png"))?;
@@ -76,7 +93,13 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                 }
                 "quit" => app.exit(0),
                 other => {
-                    if let Some(activity) = other.strip_prefix("activity:") {
+                    if other.starts_with("show:") {
+                        show_world(app);
+                        let _ = app.emit_to(WORLD, "together://command", other);
+                    } else if let Some(game) = other.strip_prefix("game:") {
+                        show_world(app);
+                        let _ = app.emit_to(WORLD, "together://game", serde_json::json!({ "id": game }));
+                    } else if let Some(activity) = other.strip_prefix("activity:") {
                         show_world(app);
                         let _ = app.emit_to(WORLD, "together://activity", activity);
                     }

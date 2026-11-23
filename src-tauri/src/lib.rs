@@ -25,6 +25,8 @@ pub fn run() {
             world::world_place,
             world::world_show,
             world::world_hide,
+            world::world_focus,
+            world::world_log,
             tray::app_open_main,
         ])
         .setup(|app| {

@@ -20,6 +20,7 @@ The user can create their character and their partner, customise and save both, 
 | 4 | Desktop companion — transparent world, always on top, click-through, drag, positions, scale, multi-monitor, tray | ✅ (needs Windows run) |
 | 5 | Animation engine — clips, priorities, interruptions, lie-down, lift; **5b**: imported PNG / GIF / sprite sheets | ✅ / 5b ⏳ |
 | 6 | Couple activities — coffee, hug, dance, walk, sit, sleep, play, talk, moments | ✅ |
+| 6b | Play together — who's out, mini games, choice bubbles, mood, comfort | ✅ v0.2 |
 | 7 | Dialogue & personality — engine, profiles, reactions, custom lines ✅; **optional AI provider layer** ⏳ |  🟡 |
 | 8 | Scenes — optional backdrop window with objects | ⏳ |
 | 9 | Settings & optimisation — shortcuts, special dates, perf budget checks | 🟡 |

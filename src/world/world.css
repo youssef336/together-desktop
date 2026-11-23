@@ -1,4 +1,12 @@
-/* Only the context menu is DOM; characters, bubbles and effects are canvas. */
+/* Only the context menu, choice bubbles and the game bar are DOM; characters, bubbles and effects are canvas. */
+/* Pixelify's "fi"/"fl" ligatures read badly at small sizes ("final" looked like "Anal"). */
+body {
+  font-variant-ligatures: none;
+}
+/* `display: flex` below would otherwise beat the hidden attribute and leave an empty bar on screen. */
+[hidden] {
+  display: none !important;
+}
 .td-menu {
   position: fixed;
   min-width: 190px;
@@ -38,4 +46,134 @@
   border: 0;
   border-top: 2px dashed #e9d9cd;
   margin: 4px 2px;
+}
+
+/* Choice bubble — a speech bubble with answers. */
+.td-choice {
+  position: fixed;
+  max-width: 260px;
+  padding: 10px 12px 12px;
+  background: #fffaf3;
+  border: 3px solid #3a2a35;
+  box-shadow: 4px 4px 0 rgba(58, 42, 53, 0.25);
+  font: 15px 'Pixelify Sans', ui-rounded, system-ui, sans-serif;
+  color: #3a2a35;
+  text-align: center;
+  user-select: none;
+  z-index: 11;
+  animation: td-pop 160ms steps(3) both;
+}
+.td-choice::after {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  left: calc(var(--tail, 50%) - 6px);
+  width: 12px;
+  height: 8px;
+  background: #fffaf3;
+  border: 3px solid #3a2a35;
+  border-top: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.td-choice p {
+  margin: 0 0 8px;
+}
+.td-choice-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.td-choice button,
+.td-hud button {
+  font: inherit;
+  color: #3a2a35;
+  background: #fbe1e3;
+  border: 2px solid #3a2a35;
+  box-shadow: 0 2px 0 #3a2a35;
+  padding: 3px 12px;
+  cursor: pointer;
+}
+.td-choice button:hover,
+.td-hud button:hover {
+  background: #f7c9ce;
+}
+.td-choice button:active,
+.td-hud button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+@keyframes td-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Game HUD */
+.td-hud {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 5px 6px 5px 12px;
+  font-variant-ligatures: none;
+  background: #fffaf3;
+  border: 3px solid #3a2a35;
+  box-shadow: 4px 4px 0 rgba(58, 42, 53, 0.25);
+  font: 15px 'Pixelify Sans', ui-rounded, system-ui, sans-serif;
+  color: #3a2a35;
+  z-index: 12;
+  white-space: nowrap;
+  animation: td-pop 160ms steps(3) both;
+}
+.td-hud button {
+  padding: 1px 10px;
+  font-size: 14px;
+}
+.td-hud.td-hud-done {
+  background: #fbe1e3;
+}
+.td-hud.td-hud-done button {
+  background: #fffaf3;
+  padding: 1px 7px;
+  line-height: 1.2;
+}
+.td-hud b {
+  font-weight: 600;
+}
+.td-hud .td-hud-hint {
+  font-size: 13px;
+  color: #8a7480;
+}
+.td-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 42, 53, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .td-choice {
+    animation: none;
+  }
+}
+
+.td-choice-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 8px;
+  padding: 4px 8px;
+  font: inherit;
+  color: #3a2a35;
+  background: #fff;
+  border: 2px solid #3a2a35;
+  outline: none;
+}
+.td-choice-input:focus {
+  border-color: #e8707f;
 }

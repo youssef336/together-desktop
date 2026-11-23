@@ -33,6 +33,15 @@ export function SettingsPage() {
         <div className="mt-3 grid gap-5 md:grid-cols-2">
           <Slider label="Character size" min={2} max={6} value={s.scale} onChange={(scale) => void save({ scale })} hint="Pixel scale — stays crisp at every size." />
           <Slider label="Speech bubble seconds" min={2} max={10} value={s.bubbleSeconds} onChange={(bubbleSeconds) => void save({ bubbleSeconds })} />
+          <Slider
+            label="Questions when you click them (%)"
+            min={0}
+            max={100}
+            step={5}
+            value={s.questionChance}
+            onChange={(questionChance) => void save({ questionChance })}
+            hint="How often a click turns into a Yes / No question instead of a reaction. 0 = never."
+          />
         </div>
         {monitors.length > 1 && (
           <label className="mt-4 block">

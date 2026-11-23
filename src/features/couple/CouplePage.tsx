@@ -7,6 +7,7 @@ import { useActiveCouple, useApp } from '../../stores/app-store';
 import { CharacterPreview } from '../../ui/CharacterPreview';
 import { Button, Card, Chips, Empty, Label, MultiChips, Slider, TextField, Title, Toggle } from '../../ui/controls';
 import { DialogueEditor } from './DialogueEditor';
+import { QuestionsEditor } from './QuestionsEditor';
 
 const MODE_HINT = {
   stationary: 'They stay put. Only conversations happen on their own.',
@@ -174,6 +175,8 @@ export function CouplePage() {
       </Card>
 
       <DialogueEditor couple={couple} a={a} b={b} onChange={(c) => void useApp.getState().saveCouple(c)} />
+
+      <QuestionsEditor couple={couple} onChange={(c) => void useApp.getState().saveCouple(c)} />
 
       {pairing}
     </div>

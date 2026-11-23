@@ -118,6 +118,30 @@ export function EditorPage({ id, role }: Props) {
       </div>
       {message && <p className="text-sm text-ink-soft" role="status">{message}</p>}
 
+      <div className="pixel-card flex flex-wrap items-end gap-4 px-5 py-4">
+        <label className="min-w-56 flex-1">
+          <span className="mb-1 block font-pixel text-sm text-ink-soft">Name</span>
+          <input
+            className="w-full rounded-xl border-2 border-line bg-card px-3 py-2 font-pixel text-xl outline-none focus:border-rose"
+            value={c.name}
+            maxLength={24}
+            placeholder={role === 'partner' ? 'Their name' : 'Your name'}
+            onChange={(e) => draft.set({ ...c, name: e.target.value })}
+            onFocus={(e) => isNew && e.target.select()}
+          />
+        </label>
+        <label className="min-w-44 flex-1">
+          <span className="mb-1 block font-pixel text-sm text-ink-soft">Nickname — what the other one calls them</span>
+          <input
+            className="w-full rounded-xl border-2 border-line bg-card px-3 py-2 outline-none focus:border-rose"
+            value={c.nickname}
+            maxLength={24}
+            placeholder="e.g. Bubu, Habibi, Batata"
+            onChange={(e) => draft.set({ ...c, nickname: e.target.value })}
+          />
+        </label>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-[minmax(320px,1fr)_minmax(380px,1.15fr)]">
         <div className="flex flex-col gap-4">
           <Card className="flex flex-col items-center gap-4 bg-[radial-gradient(circle_at_50%_70%,#fbe1e3,transparent_65%)]">

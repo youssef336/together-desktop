@@ -29,13 +29,7 @@ export function ProfilePanel({ tab, value, onChange }: Props) {
   if (tab === 'Identity') {
     return (
       <div className="flex flex-col gap-4">
-        <TextField label="Name" value={value.name} onChange={(name) => onChange({ ...value, name })} placeholder="Their name" />
-        <TextField
-          label="Nickname (used in dialogue)"
-          value={value.nickname}
-          onChange={(nickname) => onChange({ ...value, nickname })}
-          placeholder="e.g. Bubu"
-        />
+        <p className="text-sm text-ink-soft">Name and nickname are at the top of the page. You can also rename them on the desktop: right-click → Rename.</p>
         <TextField
           label="Pronouns (optional)"
           value={value.pronouns}

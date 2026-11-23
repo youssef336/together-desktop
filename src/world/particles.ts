@@ -29,6 +29,8 @@ const SPEC: Record<EffectKind, { bmp: BitmapId; every: number; life: number; vy:
   sparkle: { bmp: 'sparkle', every: 0.25, life: 0.8, vy: -4, spread: 14 },
   gift: { bmp: 'gift', every: 99, life: 2.4, vy: 0, spread: 0, once: true },
   sweat: { bmp: 'sweat', every: 99, life: 1, vy: 6, spread: 0, once: true },
+  cloud: { bmp: 'cloud', every: 99, life: 3, vy: -1, spread: 0, once: true },
+  star: { bmp: 'star', every: 0.2, life: 0.9, vy: -20, spread: 18 },
 };
 
 /** Effect emitters and their particles; positions are in screen px, speeds in sprite px/s. */

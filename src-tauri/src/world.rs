@@ -109,6 +109,22 @@ pub fn world_show<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     Ok(())
 }
 
+/// Dev aid: lets the world window print to the terminal running `tauri dev`.
+#[tauri::command]
+pub fn world_log(msg: String) {
+    #[cfg(debug_assertions)]
+    println!("[world] {msg}");
+    #[cfg(not(debug_assertions))]
+    let _ = msg;
+}
+
+/// Games need the keyboard; the world never takes focus otherwise.
+#[tauri::command]
+pub fn world_focus<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    let win = world(&app).ok_or("world window missing")?;
+    win.set_focus().map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 pub fn world_hide<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     hide_world(&app);
@@ -130,7 +146,7 @@ pub fn hide_world<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
-/// Starts the click-through loop. ~30 Hz while the world is visible, 4 Hz when hidden.
+/// Starts the click-through loop. ~60 Hz while the world is visible, 4 Hz when hidden.
 pub fn start_hit_test_loop<R: Runtime>(app: AppHandle<R>) {
     thread::spawn(move || {
         let mut interactive = true; // unknown at start → force the first update
@@ -170,13 +186,13 @@ pub fn start_hit_test_loop<R: Runtime>(app: AppHandle<R>) {
 
             // Hover feed at ~10 Hz, only when the position changed.
             if state.cursor_feed.load(Ordering::Relaxed)
-                && tick % 3 == 0
+                && tick % 6 == 0
                 && ((x - last_cursor.0).abs() > 1.0 || (y - last_cursor.1).abs() > 1.0)
             {
                 last_cursor = (x, y);
                 let _ = win.emit("together://cursor", CursorPayload { x, y });
             }
-            thread::sleep(Duration::from_millis(33));
+            thread::sleep(Duration::from_millis(16));
         }
     });
 }

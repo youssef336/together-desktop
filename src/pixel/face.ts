@@ -16,7 +16,8 @@ export function drawFace(buf: PixelBuffer, a: Appearance, l: Layout, p: Pose): v
   const y = l.hy;
   drawDetails(buf, a, y, p);
   drawEyes(buf, a, y, p);
-  drawBrows(buf, a, y);
+  if (p.eyes === 'sad') drawSadBrows(buf, a, y);
+  else drawBrows(buf, a, y);
   drawNose(buf, a, y);
   drawMouth(buf, a, y, p);
 }
@@ -82,6 +83,13 @@ function drawBrows(buf: PixelBuffer, a: Appearance, hy: number): void {
   }
 }
 
+/** Worried brows (inner ends up) — used by the sad face whatever the brow style. */
+function drawSadBrows(buf: PixelBuffer, a: Appearance, hy: number): void {
+  const row = a.eyeSize === 2 ? hy + 2 : hy + 3;
+  const c = shade(a.hairColor, -0.15);
+  buf.points([[10, 0], [11, -1], [17, 0], [16, -1]], c, 0, row);
+}
+
 function drawNose(buf: PixelBuffer, a: Appearance, hy: number): void {
   const c = shade(a.skin, -0.2);
   if (a.nose === 'dot') buf.px(13, hy + 6, c);
@@ -93,6 +101,10 @@ function drawNose(buf: PixelBuffer, a: Appearance, hy: number): void {
 
 function drawMouth(buf: PixelBuffer, a: Appearance, hy: number, p: Pose): void {
   const y = hy + 7;
+  if (p.mouth === 'sad') {
+    buf.points([[12, 1], [13, 0], [14, 0], [15, 1]], MOUTH, 0, y);
+    return;
+  }
   if (p.mouth === 'open') {
     buf.rect(13, y, 2, 2, MOUTH_IN);
     buf.span(13, 14, y, MOUTH);

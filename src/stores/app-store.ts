@@ -35,6 +35,7 @@ interface AppState {
   deletePreset(id: string): Promise<void>;
   saveSettings(patch: Partial<WorldSettings>): Promise<void>;
   startActivity(id: ActivityId): Promise<void>;
+  startGame(id: string, playerId?: string): Promise<void>;
   refreshEvents(): Promise<void>;
   wipe(): Promise<void>;
 }
@@ -51,7 +52,7 @@ export const useApp = create<AppState>((set, get) => ({
   presets: [],
   settings: DEFAULT_SETTINGS,
   events: [],
-  status: { activity: null, step: '', paused: false, visible: true },
+  status: { activity: null, game: null, step: '', paused: false, visible: true },
 
   go: (view) => set({ view }),
 
@@ -135,6 +136,11 @@ export const useApp = create<AppState>((set, get) => ({
   async startActivity(id) {
     if (get().settings.hidden) await get().saveSettings({ hidden: false });
     await send(EVENTS.activity, id);
+  },
+
+  async startGame(id, playerId) {
+    if (get().settings.hidden) await get().saveSettings({ hidden: false });
+    await send(EVENTS.game, { id, playerId });
   },
 
   async refreshEvents() {

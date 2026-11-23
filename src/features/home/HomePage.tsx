@@ -5,6 +5,8 @@ import { ACTIVITIES } from '../../engine/activities';
 import { useActiveCouple, useApp } from '../../stores/app-store';
 import { CharacterPreview } from '../../ui/CharacterPreview';
 import { Button, Card } from '../../ui/controls';
+import { GamesGrid } from '../activities/GamesGrid';
+import { WhoIsOut } from './WhoIsOut';
 
 const STAGE_LABEL = { new: 'New relationship', comfortable: 'Comfortable', close: 'Close', affectionate: 'Affectionate', custom: 'Our own kind' };
 
@@ -44,16 +46,33 @@ export function HomePage() {
 
       <Card className="overflow-hidden bg-[linear-gradient(180deg,#fdf0ea_0%,#fbe1e3_70%,#f4d6cf_70%,#f4d6cf_100%)] p-0">
         <div className="flex items-end justify-center gap-2 px-6 pt-8 pb-3">
-          <CharacterPreview appearance={a.appearance} scale={6} facing={1} label={a.name} />
+          <div className={settings.show === 'b' ? 'opacity-25 grayscale' : ''}>
+            <CharacterPreview appearance={a.appearance} scale={6} facing={1} label={a.name} />
+          </div>
           <span className="mb-24 animate-pulse font-pixel text-3xl text-rose" aria-hidden>
             ♥
           </span>
-          <CharacterPreview appearance={b.appearance} scale={6} facing={-1} label={b.name} />
+          <div className={settings.show === 'a' ? 'opacity-25 grayscale' : ''}>
+            <CharacterPreview appearance={b.appearance} scale={6} facing={-1} label={b.name} />
+          </div>
+        </div>
+        <div className="border-t-2 border-line bg-card/60 px-6 py-3">
+          <WhoIsOut a={a} b={b} />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 border-t-2 border-line bg-card/80 px-6 py-3">
           <p>
             <span className="font-pixel text-ink-soft">Currently: </span>
-            {settings.hidden ? 'Hidden from the desktop' : settings.paused ? 'Paused' : doing ? `${doing.emoji} ${doing.label}` : 'Hanging out together'}
+            {settings.hidden
+              ? 'Hidden from the desktop'
+              : status.game
+                ? '🎮 Playing a game with you'
+                : settings.paused
+                  ? 'Paused'
+                  : doing
+                    ? `${doing.emoji} ${doing.label}`
+                    : settings.show === 'both'
+                      ? 'Hanging out together'
+                      : 'Hanging out'}
           </p>
           <p className="text-sm text-ink-soft">
             {couple.relationship.dynamic === 'custom' ? couple.relationship.customDynamic || 'Custom' : couple.relationship.dynamic}
@@ -61,6 +80,12 @@ export function HomePage() {
             {couple.relationship.together && ` · together ${couple.relationship.together}`}
           </p>
         </div>
+      </Card>
+
+      <Card>
+        <h2 className="mb-1 font-pixel text-xl">Play with them</h2>
+        <p className="mb-3 text-sm text-ink-soft">Games happen right on your desktop. Press Esc any time to stop.</p>
+        <GamesGrid compact />
       </Card>
 
       <div className="grid gap-5 md:grid-cols-[1.4fr_1fr]">
@@ -117,6 +142,8 @@ function describe(e: WorldEvent, names: Map<string, string>): string {
     return `${def.emoji} ${who.join(' & ')} — ${def.label.toLowerCase()}${e.dialogue === 'user' ? ' (your idea)' : ''}`;
   }
   if (e.type === 'drag') return `✋ You moved ${who[0]}`;
+  if (e.type === 'game') return `🎮 You played ${e.game} — ${e.score ?? 0}`;
+  if (e.type === 'answer') return `💬 ${who[0]} asked: ${e.dialogue ?? ''}`;
   if (e.type === 'click') return `👆 You poked ${who[0]}`;
   return `${who.join(' & ')}`;
 }

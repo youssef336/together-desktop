@@ -45,6 +45,15 @@ export interface DialogueLine {
   opener: 'a' | 'b' | 'any';
 }
 
+export interface CustomQuestion {
+  id: string;
+  text: string;
+  yes: string;
+  no: string;
+  /** How much "no" hurts (0 = not at all). */
+  noHurts: boolean;
+}
+
 export const DIALOGUE_CATEGORIES = [
   'casual', 'romantic', 'funny', 'teasing', 'supportive', 'activity', 'thought',
   'reaction', 'greeting', 'morning', 'night', 'special',
@@ -70,6 +79,8 @@ export interface Couple {
     /** Built-in lines can be switched off per category. */
     disabledCategories: DialogueCategory[];
   };
+  /** The user's own questions (shown with Yes / No when a character is clicked). */
+  questions?: CustomQuestion[];
   behavior: {
     mode: BehaviorMode;
     /** Seconds between autonomous couple activities (lower bound; personality adds jitter). */
@@ -91,6 +102,14 @@ export interface WorldSettings {
   monitorIndex: number;
   /** Saved spots per character, as fractions of the world size (survives monitor changes). */
   positions: Record<string, { fx: number; fy: number }>;
+  /** Who is out on the desktop: both, or only one of the couple. */
+  show: 'both' | 'a' | 'b';
+  /** Mood per character, 0..100 (see domain/mood.ts). */
+  moods: Record<string, number>;
+  /** Best score per mini game. */
+  highScores: Record<string, number>;
+  /** Questions they may ask when clicked (0 = never, 100 = often). */
+  questionChance: number;
 }
 
 export const DEFAULT_SETTINGS: WorldSettings = {
@@ -104,15 +123,21 @@ export const DEFAULT_SETTINGS: WorldSettings = {
   lowPerformance: false,
   monitorIndex: 0,
   positions: {},
+  show: 'both',
+  moods: {},
+  highScores: {},
+  questionChance: 35,
 };
 
 export interface WorldEvent {
   id: string;
-  type: 'activity' | 'click' | 'dialogue' | 'drag';
+  type: 'activity' | 'click' | 'dialogue' | 'drag' | 'game' | 'answer';
   timestamp: number;
   characterIds: string[];
   activity?: ActivityId;
   dialogue?: string;
+  game?: string;
+  score?: number;
 }
 
 export function newId(): string {

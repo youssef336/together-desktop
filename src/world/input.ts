@@ -4,6 +4,8 @@ import { clickReactionWeights, weightedPick } from '../domain/personality';
 import type { Actor } from '../engine/actor';
 import { store } from '../data/store';
 import { world as native } from '../platform/bridge';
+import type { GameController } from './games/controller';
+import type { Interactions } from './interact';
 import type { ContextMenu } from './menu';
 import type { World } from './runtime';
 
@@ -13,10 +15,11 @@ const PICKUP_LINES = ['Whoa!', 'Eek!', 'Wheee!', 'Where are we going?', 'Hey! �
 const PARTNER_LINES = ['Are you okay?', 'Careful!', 'Hey, bring them back!', 'Hehe, flying?'];
 
 /** Pointer handling: click reactions, double-click quick menu, right-click menu, drag and drop, hover. */
-export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu): void {
+export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu, games: GameController, talk: Interactions): void {
   let down: { actor: Actor; x: number; y: number; offX: number; offY: number; dragging: boolean } | null = null;
   let lastClick: { id: string; at: number; timer: number } | null = null;
   const hoverWaveAt = new Map<string, number>();
+  const drags = new Map<string, number[]>();
 
   const actorAt = (x: number, y: number) => {
     const id = w.renderer.hitTest(x, y);
@@ -25,6 +28,8 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
 
   canvas.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
+    if (games.pointerDown(e.clientX, e.clientY)) return;
+    if (w.game) return; // bubble games: the desktop under the characters stays as it is
     menu.close();
     const actor = actorAt(e.clientX, e.clientY);
     if (!actor) return;
@@ -33,6 +38,7 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
   });
 
   canvas.addEventListener('pointermove', (e) => {
+    if (games.pointerMove(e.clientX, e.clientY)) return;
     if (!down) return;
     const { actor } = down;
     if (!down.dragging) {
@@ -74,6 +80,17 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
         w.say(partner, PARTNER_LINES[Math.floor(w.rnd() * PARTNER_LINES.length)]!);
       }
       void store.logEvent({ id: newId(), type: 'drag', timestamp: Date.now(), characterIds: [actor.id] });
+      // Tossed around a lot in a short time → a little dizzy and grumpy.
+      const times = [...(drags.get(actor.id) ?? []).filter((t) => w.time - t < 30), w.time];
+      drags.set(actor.id, times);
+      if (times.length >= 4) {
+        drags.set(actor.id, []);
+        w.mood(actor, 'dragged-a-lot');
+        window.setTimeout(() => {
+          actor.animator.play('pout', { force: true });
+          w.say(actor, "I'm dizzy... stop it 😵‍💫");
+        }, 700);
+      }
       w.kick();
       return;
     }
@@ -85,7 +102,10 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
       menu.open(actor, e.clientX, e.clientY, 'quick');
       return;
     }
-    const timer = window.setTimeout(() => react(w, actor), DOUBLE_CLICK_MS);
+    const timer = window.setTimeout(() => {
+      if (talk.shouldAsk()) void talk.ask(actor);
+      else react(w, actor);
+    }, DOUBLE_CLICK_MS);
     lastClick = { id: actor.id, at: now, timer };
   };
   canvas.addEventListener('pointerup', release);
@@ -93,13 +113,14 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
 
   canvas.addEventListener('contextmenu', (e) => {
     e.preventDefault();
+    if (w.game) return;
     const actor = actorAt(e.clientX, e.clientY);
     if (actor) menu.open(actor, e.clientX, e.clientY, 'full');
   });
 
   // Hover: the cursor position arrives from Rust (the window is click-through most of the time).
   w.onCursor = (x, y) => {
-    if (!w.settings.mouseReactions || w.paused) return;
+    if (!w.settings.mouseReactions || w.paused || w.game) return;
     let changed = false;
     for (const a of w.actors) {
       if (a.mode !== 'free' || !a.arrived) {
@@ -167,6 +188,7 @@ function react(w: World, actor: Actor): void {
       break;
   }
   actor.nextThinkAt = w.time + 4;
+  w.mood(actor, 'poked');
   void store.logEvent({ id: newId(), type: 'click', timestamp: Date.now(), characterIds: [actor.id], dialogue: kind });
   w.renderer.dirty = true;
   w.kick();
