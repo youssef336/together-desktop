@@ -62,3 +62,14 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design, [DEVELOPM
 - **macOS**: transparent windows use Tauri's `macos-private-api` (fine for direct distribution; not allowed on the Mac App Store). The world is visible on all Spaces. The tray icon is a template image, so it follows the menu-bar colour.
 - **Windows**: the world window is skipped from the taskbar; click-through uses `WS_EX_TRANSPARENT` via `set_ignore_cursor_events`.
 - Both: the characters live on the work area (above the taskbar / below the menu bar, beside the Dock).
+
+## Share it with friends
+
+Every version tag (`v0.2.0`, …) builds installers on GitHub (Windows + macOS) and publishes them on the repo's **Releases** page — send your friends that link.
+
+- **Windows 10/11:** download the `.exe` setup and run it. SmartScreen may say “Windows protected your PC” because the app is not code-signed yet → **More info → Run anyway**.
+- **macOS:** download the `.dmg`, drag *Together Desktop* to Applications, then the first time **right-click it → Open → Open** (not notarized yet).
+
+Everyone creates their own couple; nothing is shared between computers. To send someone *your* characters, use **My Characters → Export** and they **Import** the file.
+
+To make a release: bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, then `git tag v0.x.y && git push --tags`. A manual run of the **Build** workflow (Actions tab) builds without releasing and, on Windows, launches the app with a demo couple and uploads a screenshot.

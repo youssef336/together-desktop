@@ -1,0 +1,126 @@
+name: Build
+
+# Tag `v*`  → builds Windows + macOS installers and publishes them as a GitHub Release.
+# Manual run → builds the chosen platforms, uploads the installers as artifacts and, on Windows,
+#              launches the app with `--demo` and takes a screenshot of the desktop (smoke test).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'windows, macos or both'
+        default: windows
+        type: choice
+        options: [windows, macos, both]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            name: windows
+            args: ''
+          - platform: macos-latest
+            name: macos
+            args: '--target universal-apple-darwin'
+    runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
+    steps:
+      - name: Skip platforms not asked for
+        id: gate
+        shell: bash
+        run: |
+          want="${{ github.event.inputs.platforms || 'both' }}"
+          if [ "$want" = "both" ] || [ "$want" = "${{ matrix.name }}" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: pnpm/action-setup@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          version: 12.14.0
+
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.gate.outputs.run == 'true'
+        with:
+          targets: ${{ matrix.name == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: swatinem/rust-cache@v2
+        if: steps.gate.outputs.run == 'true'
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install and test
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm typecheck
+          pnpm test
+
+      - name: Build (and publish on tags)
+        if: steps.gate.outputs.run == 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: 'Together Desktop __VERSION__'
+          releaseBody: |
+            A little world for the two of you.
+
+            **Windows:** download the `.exe` (or `.msi`), run it. If SmartScreen says "Windows protected your PC", click **More info → Run anyway** (the app is not code-signed yet).
+            **macOS:** download the `.dmg`, drag Together into Applications. The first time, **right-click the app → Open → Open** (it is not notarized yet).
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      - name: Upload installers
+        if: steps.gate.outputs.run == 'true' && github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: together-${{ matrix.name }}
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: ignore
+
+      - name: Windows smoke test — launch with a demo couple and screenshot the desktop
+        if: steps.gate.outputs.run == 'true' && matrix.name == 'windows'
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path "src-tauri/target/release/together-desktop.exe"
+          $p = Start-Process -FilePath $exe -ArgumentList "--demo" -PassThru
+          Start-Sleep -Seconds 35
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          $g = [System.Drawing.Graphics]::FromImage($bmp)
+          $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("smoke-windows.png")
+          if ($p.HasExited) { Write-Error "Together exited early with code $($p.ExitCode)"; exit 1 }
+          Write-Host "Together is running (pid $($p.Id)); screen $($b.Width)x$($b.Height)"
+          Stop-Process -Id $p.Id
+
+      - name: Upload smoke screenshot
+        if: always() && steps.gate.outputs.run == 'true' && matrix.name == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-windows
+          path: smoke-windows.png
+          if-no-files-found: ignore

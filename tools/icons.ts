@@ -60,4 +60,12 @@ function heart(fill: (x: number, y: number, w: number, h: number, c: number[]) =
   heart(fill, 5, 6, 2, [0x22, 0x1c, 0x22, 0xff], [0x22, 0x1c, 0x22, 0xff]);
   writeFileSync('src-tauri/icons/tray.png', encodePng(rgba, S, S));
 }
+// Colour tray icon for Windows (the notification area does not tint template images).
+{
+  const S = 32;
+  const { rgba, fill } = canvas(S, null);
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as const) heart(fill, 5 + dx, 6 + dy, 2, [0x3a, 0x2a, 0x35, 0xff], [0x3a, 0x2a, 0x35, 0xff]);
+  heart(fill, 5, 6, 2, [0xe8, 0x7a, 0x86, 0xff], [0xfb, 0xd3, 0xd6, 0xff]);
+  writeFileSync('src-tauri/icons/tray-color.png', encodePng(rgba, S, S));
+}
 console.log('icons written');

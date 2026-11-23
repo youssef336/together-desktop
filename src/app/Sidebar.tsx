@@ -47,7 +47,9 @@ export function Sidebar() {
         <p className="truncate">
           {!status.visible
             ? 'Hidden'
-            : status.paused
+            : status.game
+              ? '🎮 Playing with you'
+              : status.paused
               ? 'Paused'
               : status.activity
                 ? `${ACTIVITIES[status.activity]?.emoji ?? ''} ${ACTIVITIES[status.activity]?.label ?? status.activity}`

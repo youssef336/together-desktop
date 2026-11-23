@@ -75,6 +75,11 @@ export async function openMain(view?: string): Promise<void> {
   await safeInvoke<void>('app_open_main', { view: view ?? null });
 }
 
+/** Command-line arguments of this launch (desktop only). */
+export async function launchArgs(): Promise<string[]> {
+  return (await safeInvoke<string[]>('app_launch_args')) ?? [];
+}
+
 export async function send(event: string, payload?: unknown): Promise<void> {
   if (!isTauri()) {
     window.dispatchEvent(new CustomEvent(event, { detail: payload }));

@@ -60,6 +60,7 @@ export class GameController {
       a.target = null;
     }
     if (w.settings.paused) void w.patchSettings({ paused: false });
+    void native.log(`game start ${id}`);
     const def = GAMES[id];
     const game = def.create({ world: w, player, partner, choice: this.choice, hud: this.hud });
     w.game = game;
@@ -102,6 +103,7 @@ export class GameController {
   /** Stopped early: no score, no record. */
   stop(): void {
     if (!this.w.game) return;
+    void native.log(`game stop ${this.gameId} ${new Error().stack}`);
     this.w.game.dispose?.();
     this.cleanup();
     this.hud.hide();
@@ -112,6 +114,7 @@ export class GameController {
     const game = w.game;
     const id = this.gameId;
     if (!game || !id) return;
+    void native.log(`game finish ${id} score=${game.score}`);
     game.dispose?.();
     const def = GAMES[id];
     const player = w.actors.find((a) => a.id === this.playerId) ?? w.actors[0];

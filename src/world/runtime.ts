@@ -142,13 +142,24 @@ export class World implements Stage {
     this.kick();
   }
 
-  async patchSettings(patch: Partial<WorldSettings>): Promise<void> {
-    const fresh = await store.getSettings();
-    this.settings = { ...fresh, ...patch };
-    await store.saveSettings(this.settings);
-    await send(EVENTS.dataChanged, { from: 'world' });
-    this.publishStatus();
-    this.kick();
+  private settingsQueue: Promise<void> = Promise.resolve();
+
+  /**
+   * Read-modify-write of the settings row. Writes are queued: a game end saves mood, high score
+   * and position at once, and parallel writes would overwrite each other.
+   */
+  patchSettings(patch: Partial<WorldSettings>): Promise<void> {
+    this.settingsQueue = this.settingsQueue
+      .then(async () => {
+        const fresh = await store.getSettings();
+        this.settings = { ...fresh, ...patch };
+        await store.saveSettings(this.settings);
+        await send(EVENTS.dataChanged, { from: 'world' });
+        this.publishStatus();
+        this.kick();
+      })
+      .catch((e) => console.error('[world] settings write failed', e));
+    return this.settingsQueue;
   }
 
   /** Who's out on the desktop. Reloads so the actors match. */

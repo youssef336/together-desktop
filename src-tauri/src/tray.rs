@@ -34,6 +34,12 @@ pub fn app_open_main<R: Runtime>(app: AppHandle<R>, view: Option<String>) {
     }
 }
 
+/// Launch arguments, so the frontend can honour `--demo` (seed a sample couple on an empty install).
+#[tauri::command]
+pub fn app_launch_args() -> Vec<String> {
+    std::env::args().skip(1).collect()
+}
+
 pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let open = MenuItem::with_id(app, "open", "Open Together", true, None::<&str>)?;
     let show = MenuItem::with_id(app, "show", "Show characters", true, None::<&str>)?;
@@ -71,10 +77,15 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         &[&open, &sep1, &show, &hide, &pause, &who, &activities, &games, &sep2, &settings, &quit],
     )?;
 
-    let icon = Image::from_bytes(include_bytes!("../icons/tray.png"))?;
+    // macOS tints a black template image to match the menu bar; Windows shows the icon as-is,
+    // so it gets the coloured heart (a black one disappears on a dark taskbar).
+    #[cfg(target_os = "macos")]
+    let (icon, template) = (Image::from_bytes(include_bytes!("../icons/tray.png"))?, true);
+    #[cfg(not(target_os = "macos"))]
+    let (icon, template) = (Image::from_bytes(include_bytes!("../icons/tray-color.png"))?, false);
     TrayIconBuilder::with_id("together")
         .icon(icon)
-        .icon_as_template(true)
+        .icon_as_template(template)
         .tooltip("Together Desktop")
         .menu(&menu)
         .show_menu_on_left_click(true)

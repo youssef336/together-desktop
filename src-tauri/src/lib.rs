@@ -28,6 +28,7 @@ pub fn run() {
             world::world_focus,
             world::world_log,
             tray::app_open_main,
+            tray::app_launch_args,
         ])
         .setup(|app| {
             let handle = app.handle().clone();

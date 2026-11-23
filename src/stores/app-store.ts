@@ -3,7 +3,9 @@ import { store } from '../data/store';
 import type { AppearancePreset, Character, Couple, WorldEvent, WorldSettings } from '../domain/models';
 import { DEFAULT_SETTINGS } from '../domain/models';
 import type { ActivityId } from '../domain/personality';
-import { EVENTS, send, world, type WorldStatus } from '../platform/bridge';
+import { EVENTS, launchArgs, send, world, type WorldStatus } from '../platform/bridge';
+import { createCharacter, createCouple } from '../domain/factory';
+import { DEMO_A, DEMO_B } from '../domain/templates';
 
 export type View =
   | { name: 'home' }
@@ -66,6 +68,14 @@ export const useApp = create<AppState>((set, get) => ({
         store.recentEvents(12),
       ]);
       set({ characters, couples, presets, settings, events, ready: true, error: null });
+      // `--demo` on an empty install: a sample couple, so a fresh machine (or CI) shows them right away.
+      if (characters.length === 0 && (await launchArgs()).includes('--demo')) {
+        const a = { ...createCharacter('Sami', DEMO_A), nickname: 'Sami' };
+        const b = { ...createCharacter('Lina', DEMO_B), nickname: 'Lina' };
+        await get().saveCharacter(a);
+        await get().saveCharacter(b);
+        await get().saveCouple(createCouple(a.id, b.id));
+      }
     } catch (e) {
       console.error('[app] load failed', e);
       set({ ready: true, error: 'Your saved data could not be opened.' });
