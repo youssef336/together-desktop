@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "outDir": "node_modules/.tmp/node",
+    "types": [
+      "node"
+    ],
+    "allowImportingTsExtensions": false,
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true
+  },
+  "include": [
+    "vite.config.ts",
+    "tools",
+    "src/domain",
+    "src/pixel/*.ts"
+  ],
+  "exclude": [
+    "src/pixel/sprite-cache.ts",
+    "src/pixel/draw.ts",
+    "src/pixel/effects.ts"
+  ]
+}

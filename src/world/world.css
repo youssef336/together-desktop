@@ -1,0 +1,41 @@
+/* Only the context menu is DOM; characters, bubbles and effects are canvas. */
+.td-menu {
+  position: fixed;
+  min-width: 190px;
+  padding: 6px;
+  background: #fffaf3;
+  border: 3px solid #3a2a35;
+  box-shadow: 4px 4px 0 rgba(58, 42, 53, 0.25);
+  font: 15px 'Pixelify Sans', ui-rounded, system-ui, sans-serif;
+  color: #3a2a35;
+  user-select: none;
+  z-index: 10;
+}
+.td-menu-title {
+  padding: 4px 8px 6px;
+  font-size: 13px;
+  color: #8a7480;
+  border-bottom: 2px dashed #e9d9cd;
+  margin-bottom: 4px;
+}
+.td-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+.td-menu button:hover,
+.td-menu button:focus-visible {
+  background: #f7e3d7;
+  outline: none;
+}
+.td-menu hr {
+  border: 0;
+  border-top: 2px dashed #e9d9cd;
+  margin: 4px 2px;
+}

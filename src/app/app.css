@@ -1,0 +1,69 @@
+@import 'tailwindcss';
+@import '@fontsource/pixelify-sans/400.css';
+@import '@fontsource/pixelify-sans/600.css';
+
+/* Cozy palette: cream paper, plum ink, pastel accents. Pixel font for display, system font for reading. */
+@theme {
+  --color-paper: #fbf5ee;
+  --color-card: #fffdf9;
+  --color-sunk: #f4ebe1;
+  --color-line: #eadccf;
+  --color-ink: #3a2a35;
+  --color-ink-soft: #7d6772;
+  --color-rose: #e8707f;
+  --color-rose-soft: #fbe1e3;
+  --color-peach: #f2c58c;
+  --color-mint: #b8d8a8;
+  --color-sky: #9fd0d8;
+  --color-lilac: #c9b3e0;
+  --font-pixel: 'Pixelify Sans', ui-rounded, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+canvas.pixel {
+  image-rendering: pixelated;
+}
+/* Pixel-ish card edge: 2px ink-tinted border with a hard offset shadow. */
+.pixel-card {
+  background: var(--color-card);
+  border: 2px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: 0 2px 0 var(--color-line);
+}
+.pixel-btn {
+  border: 2px solid var(--color-ink);
+  box-shadow: 0 3px 0 var(--color-ink);
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+.pixel-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--color-ink);
+}
+.pixel-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+input[type='range'] {
+  accent-color: var(--color-rose);
+}
+:focus-visible {
+  outline: 2px solid var(--color-rose);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel-btn {
+    transition: none;
+  }
+}
