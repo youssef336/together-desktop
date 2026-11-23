@@ -79,12 +79,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-          releaseName: 'Together Desktop __VERSION__'
+          releaseName: 'Bello Together __VERSION__'
           releaseBody: |
-            A little world for the two of you.
+            Bello Together — a little world for the two of you. Made with ♥ by Bello.
 
             **Windows:** download the `.exe` (or `.msi`), run it. If SmartScreen says "Windows protected your PC", click **More info → Run anyway** (the app is not code-signed yet).
-            **macOS:** download the `.dmg`, drag Together into Applications. The first time, **right-click the app → Open → Open** (it is not notarized yet).
+            **macOS:** download the `.dmg`, drag Bello Together into Applications. The first time, **right-click the app → Open → Open** (it is not notarized yet).
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
