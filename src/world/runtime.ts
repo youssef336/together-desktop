@@ -11,6 +11,7 @@ import { EVENTS, send, world as native, type WorldStatus } from '../platform/bri
 import { applyMood, driftMood, MOOD_DEFAULT, MOOD_SAD, type MoodCause } from '../domain/mood';
 import { think } from './behavior';
 import type { Game } from './games/types';
+import { Mischief } from './mischief';
 import { Particles } from './particles';
 import { Renderer } from './renderer';
 import { SceneLayer } from './scene-layer';
@@ -28,6 +29,8 @@ export class World implements Stage {
   readonly scheduler = new CoupleScheduler();
   readonly particles = new Particles();
   readonly scene = new SceneLayer();
+  /** Opt-in pranks: grabbing the mouse, closing a tab (see world/mischief.ts). */
+  readonly mischief: Mischief = new Mischief(this);
   readonly renderer: Renderer;
   time = 0;
   private momentAt = 40;
@@ -151,13 +154,18 @@ export class World implements Stage {
     }
     this.clampAll();
     if (this.couple) this.scheduler.plan({ couple: this.couple, now: this.time });
-    void native.setCursorFeed(settings.mouseReactions && !settings.paused);
+    this.syncCursorFeed();
     // The world window starts hidden; show it once there is someone to show.
     if (!settings.hidden && this.actors.length > 0) void native.show();
     else if (this.actors.length === 0) void native.hide();
     this.renderer.dirty = true;
     this.publishStatus();
     this.kick();
+  }
+
+  /** The cursor feed runs for hover reactions, and for mischief (they need to find your mouse). */
+  syncCursorFeed(): void {
+    void native.setCursorFeed((this.settings.mouseReactions || this.mischief.wanted) && !this.settings.paused);
   }
 
   private settingsQueue: Promise<void> = Promise.resolve();
@@ -200,8 +208,8 @@ export class World implements Stage {
     const { left, right, top, bottom } = this.bounds;
     const { w, h } = this.renderer.view;
     for (const a of this.actors) {
-      if (a.mode === 'dragged') {
-        // Picked up: anywhere on screen; the scene floor takes them back on drop.
+      if (a.mode === 'dragged' || a.mode === 'mischief') {
+        // Picked up (or off on a prank): anywhere on screen; the scene floor takes them back on drop.
         a.x = Math.max(this.px(10), Math.min(w - this.px(10), a.x));
         a.y = Math.max(this.px(40), Math.min(h - 2, a.y));
         continue;
@@ -216,6 +224,7 @@ export class World implements Stage {
     if (this.actors.length < 2) return false;
     const def: ActivityDef | undefined = (ACTIVITIES as Record<string, ActivityDef>)[id] ?? MOMENTS.find((m) => m.id === id);
     if (!def) return false;
+    this.mischief.abort();
     if (this.actors.some((a) => a.mode === 'dragged')) return false;
     this.runner?.finish();
     const [a, b] = this.actors as [Actor, Actor];
@@ -282,6 +291,7 @@ export class World implements Stage {
     const now = performance.now();
     const dt = Math.min(0.1, (now - this.last) / 1000);
     this.last = now;
+    if ((this.game || this.paused) && this.mischief.active) this.mischief.abort();
     if (this.game) this.updateGame(dt);
     else if (!this.paused) this.update(dt);
     this.renderer.render();
@@ -294,6 +304,7 @@ export class World implements Stage {
     return (
       this.actors.some((a) => !a.arrived || a.mode === 'dragged') ||
       this.particles.active ||
+      this.mischief.active ||
       (this.runner !== null && this.runner.stepName.startsWith('walk'))
     );
   }
@@ -331,6 +342,7 @@ export class World implements Stage {
       else if (this.time >= this.momentAt) this.moment();
     }
     this.updateMoods(dt);
+    this.mischief.update(dt);
     if (this.scene.tick(this.time)) this.renderer.dirty = true;
     if (this.scene.active) {
       // After sitting on the sofa or napping on the bed, hop back down to the floor.

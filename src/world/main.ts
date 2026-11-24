@@ -32,6 +32,8 @@ async function boot(): Promise<void> {
   menu.attach(games, talk);
   w.onRender = () => choice.place();
   wireInput(canvas, w, menu, games, talk);
+  // While the pointer is over the world itself we know exactly where it is (mischief needs it).
+  window.addEventListener('pointermove', (e) => w.mischief.onCursor(e.clientX, e.clientY));
   await document.fonts.load('16px "Pixelify Sans"').catch(() => undefined);
   await w.load();
 
@@ -48,7 +50,10 @@ async function boot(): Promise<void> {
     if (!games.playing) w.startActivity(id);
   });
   await on<{ id: GameId; playerId?: string }>(EVENTS.game, (p) => games.start(p.id, p.playerId));
-  await on<{ x: number; y: number }>(EVENTS.cursor, (c) => w.onCursor(c.x, c.y));
+  await on<{ x: number; y: number }>(EVENTS.cursor, (c) => {
+    w.mischief.onCursor(c.x, c.y);
+    w.onCursor(c.x, c.y);
+  });
   await on<string>(EVENTS.command, (cmd) => {
     if (cmd === 'toggle-pause') void w.patchSettings({ paused: !w.settings.paused });
     if (cmd === 'hidden') {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { autostart, isTauri, type MonitorInfo, world } from '../../platform/bridge';
 import { useApp } from '../../stores/app-store';
 import { Button, Card, Label, Slider, Title, Toggle } from '../../ui/controls';
+import { MischiefCard } from './MischiefCard';
 
 export function SettingsPage() {
   const s = useApp((st) => st.settings);
@@ -62,6 +63,8 @@ export function SettingsPage() {
         )}
       </Card>
 
+      <MischiefCard />
+
       <Card>
         <h2 className="mb-2 font-pixel text-xl">Performance</h2>
         <Toggle
@@ -102,7 +105,7 @@ export function SettingsPage() {
         <h2 className="mb-2 font-pixel text-xl">Privacy</h2>
         <ul className="mb-4 list-disc pl-5 text-sm text-ink-soft">
           <li>No account, no cloud, no analytics. Everything is a local file on this computer.</li>
-          <li>No screen recording and no keystrokes — only the cursor position for hover reactions, if enabled above.</li>
+          <li>No screen recording and no keystroke logging — only the cursor position for hover reactions and mischief, if enabled above. Mischief may move your cursor and, if you allow it, press ⌘W / Ctrl+W in your browser — nothing else.</li>
           <li>AI dialogue is not built yet; when it is, it will be off by default and clearly marked.</li>
         </ul>
         {confirmWipe ? (

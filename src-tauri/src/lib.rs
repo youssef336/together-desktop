@@ -1,4 +1,5 @@
 mod db;
+mod mischief;
 mod tray;
 mod world;
 
@@ -27,6 +28,8 @@ pub fn run() {
             world::world_hide,
             world::world_focus,
             world::world_log,
+            mischief::world_set_cursor,
+            mischief::world_close_tab,
             tray::app_open_main,
             tray::app_launch_args,
         ])

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { BASE_APPEARANCE, randomizeAppearance } from '../domain/appearance';
 import { fillTokens, pickExchange } from '../domain/dialogue';
+import { isNaughty, mischiefOf, nextPrankIn, pickPrank, tugsToRelease } from '../domain/mischief';
+import { DEFAULT_SETTINGS } from '../domain/models';
 import { createCharacter, createCouple, exportCharacter, importCharacter } from '../domain/factory';
 import { PERSONALITY_PRESETS } from '../domain/personality';
 import { BELLO, DEMO_B } from '../domain/templates';
@@ -159,4 +161,28 @@ describe('activities', () => {
       expect(st.said.length).toBeGreaterThan(0);
     });
   }
+});
+
+describe('mischief', () => {
+  it('is off by default and per character', () => {
+    expect(isNaughty(mischiefOf(DEFAULT_SETTINGS, 'x'))).toBe(false);
+    const s = { mischief: { x: { grab: true, tab: false, pace: 'often' as const } } };
+    expect(isNaughty(mischiefOf(s, 'x'))).toBe(true);
+    expect(isNaughty(mischiefOf(s, 'y'))).toBe(false);
+  });
+  it('waits at least a minute and follows the pace', () => {
+    const often = { grab: true, tab: false, pace: 'often' as const };
+    const rare = { ...often, pace: 'rare' as const };
+    for (const r of [0, 0.5, 0.999]) {
+      expect(nextPrankIn(often, () => r)).toBeGreaterThanOrEqual(60);
+      expect(nextPrankIn(rare, () => r)).toBeGreaterThan(nextPrankIn(often, () => r));
+    }
+  });
+  it('picks only enabled pranks and needs 2-4 tugs', () => {
+    expect(pickPrank({ grab: false, tab: true, pace: 'often' })).toBe('tab');
+    expect(pickPrank({ grab: true, tab: false, pace: 'often' })).toBe('grab');
+    expect(pickPrank({ grab: false, tab: false, pace: 'often' })).toBeNull();
+    expect(tugsToRelease(0)).toBe(2);
+    expect(tugsToRelease(100)).toBe(4);
+  });
 });
