@@ -22,6 +22,8 @@ export interface Clip {
 export const CLIP_IDS = [
   'idle', 'walk', 'run', 'sit', 'sleep', 'jump', 'wave', 'dance', 'hug', 'hold', 'drink',
   'talk', 'happy', 'surprise', 'blush', 'dangle', 'land', 'cheer', 'think', 'pout', 'sadIdle', 'catch',
+  // Fights (engine/fight.ts)
+  'angry', 'punch', 'windup', 'throw', 'hurt', 'duck', 'dizzy', 'sulk', 'chase', 'flee', 'stomp',
 ] as const;
 export type ClipId = (typeof CLIP_IDS)[number];
 
@@ -116,6 +118,51 @@ const CLIPS: Clip[] = [
   {
     id: 'catch', label: 'Catch', category: 'move', fps: 10, loop: true, priority: 1,
     frames: [f({ arms: 'up', legs: 'stepA', mouth: 'smile' }), f({ arms: 'up', bob: 1, mouth: 'smile' }), f({ arms: 'up', legs: 'stepB', mouth: 'smile' }), f({ arms: 'up', bob: 1, mouth: 'smile' })],
+  },
+  // ── Fights ──────────────────────────────────────────────────────────────
+  {
+    id: 'angry', label: 'Fists up', category: 'social', fps: 6, loop: true, priority: 2,
+    frames: [f({ arms: 'guard', eyes: 'angry', mouth: 'grit' }), f({ arms: 'guard', eyes: 'angry', mouth: 'grit', legs: 'stepA' }, { lift: 1 }), f({ arms: 'guard', eyes: 'angry', mouth: 'grit', bob: 1 }), f({ arms: 'guard', eyes: 'angry', mouth: 'grit', legs: 'stepB' }, { lift: 1 })],
+  },
+  {
+    id: 'punch', label: 'Punch', category: 'social', fps: 10, loop: false, priority: 4,
+    frames: [f({ arms: 'guard', eyes: 'angry', mouth: 'grit', bob: 1 }), f({ arms: 'guard', eyes: 'angry', mouth: 'grit', bob: 1 }), f({ arms: 'punch', eyes: 'angry', mouth: 'open', legs: 'stepA' }), f({ arms: 'punch', eyes: 'angry', mouth: 'open', legs: 'stepA' }), f({ arms: 'punch', eyes: 'angry', mouth: 'grit' }), f({ arms: 'guard', eyes: 'angry', mouth: 'grit' })],
+  },
+  {
+    id: 'windup', label: 'Wind up', category: 'social', fps: 4, loop: true, priority: 3,
+    frames: [f({ arms: 'windup', eyes: 'angry', mouth: 'grit', legs: 'stepB' }), f({ arms: 'windup', eyes: 'angry', mouth: 'grit', legs: 'stepB', bob: 1 })],
+  },
+  {
+    id: 'throw', label: 'Throw', category: 'social', fps: 10, loop: false, priority: 4,
+    frames: [f({ arms: 'windup', eyes: 'angry', mouth: 'grit', legs: 'stepB', bob: 1 }), f({ arms: 'throw', eyes: 'angry', mouth: 'open', legs: 'stepA' }), f({ arms: 'throw', eyes: 'angry', mouth: 'open', legs: 'stepA' }), f({ arms: 'throw', eyes: 'angry', mouth: 'grit' }), f({ arms: 'down', eyes: 'angry', mouth: 'grit' })],
+  },
+  {
+    id: 'hurt', label: 'Ouch', category: 'reaction', fps: 8, loop: false, priority: 5,
+    frames: [f({ arms: 'up', eyes: 'hurt', mouth: 'open' }, { lift: 2 }), f({ arms: 'up', eyes: 'hurt', mouth: 'open' }, { lift: 1 }), f({ eyes: 'hurt', mouth: 'open', bob: 1 }), f({ eyes: 'hurt', mouth: 'sad', bob: 1 }), f({ eyes: 'angry', mouth: 'sad' }), f({ eyes: 'angry', mouth: 'grit' })],
+  },
+  {
+    id: 'duck', label: 'Duck', category: 'reaction', fps: 8, loop: false, priority: 5,
+    frames: [f({ legs: 'sit', arms: 'guard', eyes: 'wide', mouth: 'open' }), ...times(4, f({ legs: 'sit', arms: 'guard', eyes: 'closed', mouth: 'grit' })), f({ eyes: 'wide', mouth: 'smile' }, { lift: 1 }), f({ eyes: 'angry', mouth: 'smile' })],
+  },
+  {
+    id: 'dizzy', label: 'Seeing stars', category: 'reaction', fps: 3, loop: true, priority: 3,
+    frames: [f({ legs: 'sit', eyes: 'hurt', mouth: 'open' }), f({ legs: 'sit', eyes: 'closed', mouth: 'sad', bob: 1 }), f({ legs: 'sit', eyes: 'hurt', mouth: 'sad', look: 1 }), f({ legs: 'sit', eyes: 'closed', mouth: 'open', bob: 1, look: -1 })],
+  },
+  {
+    id: 'sulk', label: 'Sulk', category: 'rest', fps: 2, loop: true, priority: 2,
+    frames: [...times(3, f({ arms: 'cross', eyes: 'angry', mouth: 'sad', look: -1 })), f({ arms: 'cross', eyes: 'closed', mouth: 'sad', bob: 1 }), ...times(2, f({ arms: 'cross', eyes: 'sad', mouth: 'sad', bob: 1 }))],
+  },
+  {
+    id: 'chase', label: 'Chase', category: 'move', fps: 12, loop: true, priority: 1,
+    frames: [f({ legs: 'stepA', arms: 'windup', eyes: 'angry', mouth: 'open' }, { lift: 1 }), f({ bob: 1, arms: 'windup', eyes: 'angry', mouth: 'grit' }), f({ legs: 'stepB', arms: 'windup', eyes: 'angry', mouth: 'open' }, { lift: 1 }), f({ bob: 1, arms: 'windup', eyes: 'angry', mouth: 'grit' })],
+  },
+  {
+    id: 'flee', label: 'Run away', category: 'move', fps: 12, loop: true, priority: 1,
+    frames: [f({ legs: 'stepA', arms: 'up', eyes: 'wide', mouth: 'open' }, { lift: 1 }), f({ bob: 1, arms: 'up', eyes: 'wide', mouth: 'open' }), f({ legs: 'stepB', arms: 'up', eyes: 'wide', mouth: 'open' }, { lift: 1 }), f({ bob: 1, arms: 'up', eyes: 'wide', mouth: 'open' })],
+  },
+  {
+    id: 'stomp', label: 'Stomp', category: 'reaction', fps: 8, loop: false, priority: 4,
+    frames: [f({ legs: 'stepA', arms: 'down', eyes: 'angry', mouth: 'open' }, { lift: 2 }), f({ eyes: 'angry', mouth: 'grit', bob: 1 }), f({ legs: 'stepB', arms: 'down', eyes: 'angry', mouth: 'open' }, { lift: 2 }), f({ eyes: 'angry', mouth: 'grit', bob: 1 }), f({ arms: 'guard', eyes: 'angry', mouth: 'grit' })],
   },
 ];
 

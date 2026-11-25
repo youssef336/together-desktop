@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BELLO, DEMO_B, MADE_BY } from '../domain/templates';
+import { BELLO, MADE_BY, MALOUKA } from '../domain/templates';
 import { CharacterPreview } from '../ui/CharacterPreview';
 
 /** Opening card: the big BELLO name for a moment, then it fades away. Click to skip. */
@@ -23,7 +23,7 @@ export function Splash() {
     >
       <div className="flex items-end gap-3">
         <CharacterPreview appearance={BELLO} clip="wave" scale={5} label="Bello waving" />
-        <CharacterPreview appearance={DEMO_B} clip="happy" scale={5} facing={-1} label="Their partner" />
+        <CharacterPreview appearance={MALOUKA} clip="happy" scale={5} facing={-1} label="Malouka, Bello's partner" />
       </div>
       <p className="font-pixel text-8xl leading-none tracking-wider text-rose [text-shadow:6px_6px_0_var(--color-ink)]">{MADE_BY.toUpperCase()}</p>
       <p className="font-pixel text-2xl">Together</p>

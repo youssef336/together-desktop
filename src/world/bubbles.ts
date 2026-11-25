@@ -21,6 +21,8 @@ export function bubbleFont(s: number): { font: string; size: number } {
   return { font: `${size}px "Pixelify Sans", ui-rounded, system-ui, sans-serif`, size };
 }
 
+const ARABIC = /[\u0600-\u06FF]/;
+
 /** Breaks the pixel font's f-ligatures with a zero-width non-joiner. */
 const noLigatures = (t: string) => t.replace(/f(?=[filt])/g, 'f\u200c');
 
@@ -98,7 +100,10 @@ export function drawBubble(ctx: CanvasRenderingContext2D, b: BubbleLayout, alpha
   ctx.fillStyle = TEXT;
   ctx.font = b.font;
   ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
   b.lines.forEach((line, i) => {
+    // Arabic lines (the fight's Egyptian lines, custom lines) read right to left: emoji and "?!" land on the left.
+    ctx.direction = ARABIC.test(line) ? 'rtl' : 'ltr';
     const lw = ctx.measureText(line).width;
     ctx.fillText(line, Math.round(x + (w - lw) / 2), Math.round(y + b.pad * 0.8 + i * b.lineH));
   });

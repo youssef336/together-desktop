@@ -12,9 +12,16 @@ export type ArmPose =
   | 'hug'
   | 'cup'
   | 'cupUp'
-  | 'reach';
-export type EyePose = 'open' | 'closed' | 'happy' | 'wide' | 'sad';
-export type MouthPose = 'default' | 'open' | 'smile' | 'sad';
+  | 'reach'
+  // Fights: a fist straight at the partner, an arm cocked up to throw, the follow-through,
+  // fists up in front of the face, arms crossed in a sulk.
+  | 'punch'
+  | 'windup'
+  | 'throw'
+  | 'guard'
+  | 'cross';
+export type EyePose = 'open' | 'closed' | 'happy' | 'wide' | 'sad' | 'angry' | 'hurt';
+export type MouthPose = 'default' | 'open' | 'smile' | 'sad' | 'grit';
 
 export interface Pose {
   legs: LegPose;

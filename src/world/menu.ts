@@ -88,6 +88,8 @@ export class ContextMenu {
       const def = ACTIVITIES[id];
       item(`${def.emoji}  ${def.label}`, () => w.startActivity(id, actor.id));
     }
+    // A fight always ends in making up (engine/fight.ts).
+    if (kind === 'full' && couple) item('😤  Pick a fight (then make up)', () => w.startActivity('fight', actor.id));
     if (kind === 'full') {
       sep();
       for (const s of SOLO) item(s.label, () => actor.animator.play(s.clip, { force: true }));
