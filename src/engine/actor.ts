@@ -24,6 +24,8 @@ export class Actor {
   mode: ActorMode = 'free';
   target: { x: number; y: number; run: boolean } | null = null;
   bubble: Bubble | null = null;
+  /** Not drawn (inside a fight's dust cloud). Activities always clear it when they end. */
+  hidden = false;
   /** World time (s) when the free behaviour may pick its next move. */
   nextThinkAt = 0;
   /** Clip to hold after arriving (activities set it). */

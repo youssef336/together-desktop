@@ -16,7 +16,9 @@ export type MoodCause =
   | 'comforted'
   | 'dragged-a-lot'
   | 'poked'
-  | 'ignored';
+  | 'ignored'
+  | 'fought'
+  | 'made-up';
 
 const DELTA: Record<MoodCause, number> = {
   'answer-kind': 12,
@@ -29,6 +31,9 @@ const DELTA: Record<MoodCause, number> = {
   'dragged-a-lot': -8,
   poked: 1,
   ignored: -3,
+  // A fight stings a little; making up afterwards more than heals it.
+  fought: -8,
+  'made-up': 22,
 };
 
 export function clampMood(n: number): number {

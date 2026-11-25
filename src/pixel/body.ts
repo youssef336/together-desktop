@@ -131,9 +131,40 @@ function rightArm(pose: ArmPose, l: Layout, side: 'a' | 'b'): Rect[] {
       return [[rx, t + 1, 2, 1], [rx, t + 2, 2, 1], [rx, t + 3, 2, 1], [rx, t + 4, 2, 1], [rx - 1, t + 5, 2, 1], [rx - 2, t + 4, 2, 1], [rx - 3, t + 4, 2, 1]];
     case 'cupUp':
       return [[rx, t + 1, 2, 1], [rx, t, 2, 1], [rx, t - 1, 2, 1], [rx - 1, t - 2, 2, 1], [rx - 2, t - 2, 2, 1], [rx - 3, t - 3, 2, 1], [rx - 4, t - 3, 2, 1]];
+    case 'punch':
+      // Straight out at the partner, fist at the end.
+      return [...Array.from({ length: 6 }, (_, i): Rect => [rx + i, t + 2, 1, 2]), [rx + 6, t + 1, 2, 3]];
+    case 'windup':
+      // Cocked up beside the head, the hand (and whatever it throws) above it.
+      return [[rx, t + 1, 2, 1], [rx + 1, t, 2, 1], [rx + 2, t - 1, 2, 1], [rx + 2, t - 2, 2, 1], [rx + 2, t - 3, 2, 1], [rx + 2, t - 4, 2, 1], [rx + 2, t - 6, 3, 2]];
+    case 'throw':
+      // Follow-through: forward and a little up.
+      return Array.from({ length: 7 }, (_, i): Rect => [rx + i, t + 1 - Math.floor(i / 2), 1, 2]);
+    case 'guard':
+      // Elbow down, forearm up, fist by the chin.
+      return [[rx, t + 1, 2, 1], [rx, t + 2, 2, 1], [rx, t + 3, 3, 1], [rx + 2, t + 1, 2, 2], [rx + 2, t - 1, 2, 2], [rx + 2, t - 3, 2, 2]];
+    case 'cross':
     case 'down':
       return down(0);
   }
+}
+
+/** Arms crossed over the chest (a sulk): both shoulders, then two forearms across the torso. */
+function drawCrossedArms(buf: PixelBuffer, a: Appearance, l: Layout): void {
+  const t = l.ty;
+  const rx = l.torsoR + 1;
+  const lx = mirrorX(rx, 2);
+  const sleeve = a.top === 'tank' ? a.skin : a.topColor;
+  const longSleeve = SLEEVE_ROWS[a.top] >= 5;
+  for (let y = t + 1; y <= t + 4; y++) {
+    buf.rect(rx, y, 2, 1, y < t + 1 + SLEEVE_ROWS[a.top] ? a.topColor : a.skin);
+    buf.rect(lx, y, 2, 1, y < t + 1 + SLEEVE_ROWS[a.top] ? a.topColor : a.skin);
+  }
+  // Upper forearm (right arm) crosses to the left; the lower one (left arm) to the right.
+  buf.rect(l.torsoL + 1, t + 3, rx - l.torsoL - 1, 2, longSleeve ? sleeve : a.skin);
+  buf.rect(l.torsoL, t + 3, 2, 2, a.skin);
+  buf.rect(lx + 2, t + 5, l.torsoR - lx - 2, 2, longSleeve ? shade(sleeve, -0.1) : shade(a.skin, -0.06));
+  buf.rect(l.torsoR - 1, t + 5, 2, 2, a.skin);
 }
 
 function paintArm(buf: PixelBuffer, a: Appearance, rects: Rect[]): void {
@@ -146,9 +177,17 @@ function paintArm(buf: PixelBuffer, a: Appearance, rects: Rect[]): void {
 
 /** Arm poses describe the right arm (the one facing the partner); the left follows. */
 export function drawArms(buf: PixelBuffer, a: Appearance, l: Layout, p: Pose): CupSpot | null {
+  if (p.arms === 'cross') {
+    drawCrossedArms(buf, a, l);
+    return null;
+  }
   const right = rightArm(p.arms, l, 'a');
   let left: Rect[];
-  if (p.arms === 'hug') {
+  const mirror = (rects: Rect[]) => rects.map(([x, y, w, h]) => [mirrorX(x, w), y, w, h] as Rect);
+  if (p.arms === 'punch' || p.arms === 'guard') {
+    // The other fist stays up by the face.
+    left = mirror(rightArm('guard', l, 'b'));
+  } else if (p.arms === 'hug') {
     left = Array.from({ length: 7 }, (_, i) => [l.torsoL - 2 + i * 2, l.ty + 4, 2, 2] as Rect);
   } else if (p.arms === 'up' || p.arms === 'swingA' || p.arms === 'swingB' || p.arms === 'reach') {
     left = rightArm(p.arms === 'reach' ? 'down' : p.arms, l, 'b').map(([x, y, w, h]) => [mirrorX(x, w), y, w, h] as Rect);

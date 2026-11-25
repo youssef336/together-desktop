@@ -3,7 +3,7 @@ import type { Character, Couple, DialogueCategory, WorldSettings } from '../doma
 import { newId } from '../domain/models';
 import type { ActivityId } from '../domain/personality';
 import { ACTIVITIES, MOMENTS } from '../engine/activities';
-import { type ActivityDef, ActivityRunner, type EffectKind, type Stage } from '../engine/activity';
+import { type ActivityDef, ActivityRunner, type EffectKind, type ScreenTone, type Stage, type Toss } from '../engine/activity';
 import { Actor } from '../engine/actor';
 import { CoupleScheduler } from '../engine/scheduler';
 import { store } from '../data/store';
@@ -13,6 +13,8 @@ import { think } from './behavior';
 import type { Game } from './games/types';
 import { Mischief } from './mischief';
 import { Particles } from './particles';
+import { Projectiles } from './projectiles';
+import { ScreenFx } from './screen-fx';
 import { Renderer } from './renderer';
 import { SceneLayer } from './scene-layer';
 import type { Placed } from '../scenes/scenes';
@@ -28,6 +30,9 @@ export class World implements Stage {
   runner: ActivityRunner | null = null;
   readonly scheduler = new CoupleScheduler();
   readonly particles = new Particles();
+  /** Things thrown in a fight, and the screen's colour / shake (engine/fight.ts). */
+  readonly projectiles = new Projectiles();
+  readonly screenFx = new ScreenFx();
   readonly scene = new SceneLayer();
   /** Opt-in pranks: grabbing the mouse, closing a tab (see world/mischief.ts). */
   readonly mischief: Mischief = new Mischief(this);
@@ -47,6 +52,7 @@ export class World implements Stage {
   /** Called on every render so DOM bubbles can follow their character. */
   onRender: () => void = () => {};
   private comfortAt = 30;
+  private lastFightAt: number | undefined;
   private sides = new Map<string, 'a' | 'b'>();
   private moodSavedAt = 0;
   private moodDirty = false;
@@ -93,6 +99,23 @@ export class World implements Stage {
   }
   effect(kind: EffectKind, x: number, y: number, seconds = 2.5): void {
     this.particles.emit(kind, x, y, seconds);
+  }
+  toss(t: Toss): void {
+    this.projectiles.toss(t);
+  }
+  screen(tone: ScreenTone, seconds: number): void {
+    this.screenFx.set(tone, seconds);
+  }
+  shake(power: number, seconds = 0.25): void {
+    if (!this.settings.lowPerformance) this.screenFx.shake(power, seconds);
+  }
+
+  /** A fight that was cut short (drag, game, another activity) must not leave the screen red or grey. */
+  private settleFightFx(): void {
+    const tone = this.screenFx.current;
+    const fighting = this.runner?.def.id === 'fight';
+    if ((!fighting || this.paused) && (tone === 'angry' || tone === 'sulk')) this.screenFx.clear();
+    if (this.game && this.projectiles.active) this.projectiles.clear();
   }
 
   // ── Mood ───────────────────────────────────────────────────────────────
@@ -233,6 +256,7 @@ export class World implements Stage {
       initiator = CoupleScheduler.pickInitiator(a.character.personality, b.character.personality, this.rnd) === 'a' ? a : b;
     }
     const partner = initiator === a ? b : a;
+    if (def.id === 'fight') this.lastFightAt = this.time;
     this.runner = new ActivityRunner(def, { initiator, partner, stage: this });
     this.runner.start();
     if (def.id in ACTIVITIES) {
@@ -273,6 +297,11 @@ export class World implements Stage {
     const spontaneous = MOMENTS.filter((m) => m.id !== 'comfort');
     const pick = spontaneous[Math.floor(this.rnd() * spontaneous.length)]!;
     if (pick.id === 'gift' && this.rnd() > 0.25) return; // gifts are rare
+    if (pick.id === 'fight') {
+      // Rarer still, and never when one of them is already sad, or on cooldown.
+      if (this.rnd() > 0.3 || this.actors.some((a) => this.moodOf(a) < MOOD_SAD)) return;
+      if (this.time - (this.lastFightAt ?? -Infinity) < pick.cooldown) return;
+    }
     this.startActivity(pick.id, undefined, 'auto');
   }
 
@@ -292,6 +321,7 @@ export class World implements Stage {
     const dt = Math.min(0.1, (now - this.last) / 1000);
     this.last = now;
     if ((this.game || this.paused) && this.mischief.active) this.mischief.abort();
+    this.settleFightFx();
     if (this.game) this.updateGame(dt);
     else if (!this.paused) this.update(dt);
     this.renderer.render();
@@ -304,6 +334,8 @@ export class World implements Stage {
     return (
       this.actors.some((a) => !a.arrived || a.mode === 'dragged') ||
       this.particles.active ||
+      this.projectiles.active ||
+      this.screenFx.active ||
       this.mischief.active ||
       (this.runner !== null && this.runner.stepName.startsWith('walk'))
     );
@@ -364,6 +396,15 @@ export class World implements Stage {
       this.particles.update(dt, s, this.rnd);
       this.renderer.dirty = true;
     }
+    if (this.projectiles.active) {
+      this.projectiles.update(dt, s, this.particles);
+      this.renderer.dirty = true;
+    }
+    if (this.screenFx.active) {
+      this.screenFx.update(dt, s, this.rnd);
+      this.renderer.dirty = true;
+    }
+    this.renderer.setOffset(this.screenFx.offset);
   }
 
   private updateGame(dt: number): void {

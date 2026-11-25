@@ -1,9 +1,34 @@
 import type { DialogueCategory } from '../domain/models';
 import type { ActivityId } from '../domain/personality';
 import type { Actor } from './actor';
+import type { Throwable } from '../pixel/effects';
 import type { ClipId } from './clips';
 
-export type EffectKind = 'heart' | 'hearts' | 'steam' | 'zzz' | 'note' | 'sparkle' | 'gift' | 'sweat' | 'cloud' | 'star';
+export type EffectKind =
+  | 'heart' | 'hearts' | 'steam' | 'zzz' | 'note' | 'sparkle' | 'gift' | 'sweat' | 'cloud' | 'star'
+  // Fights (engine/fight.ts)
+  | 'pow' | 'anger' | 'dust' | 'feathers' | 'splat' | 'cream' | 'storm' | 'heartbreak' | 'dizzy' | 'rose' | 'love';
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+/** How a thrown thing ends: bursts on the target, falls at its feet, or flies past and lands behind. */
+export interface Toss {
+  item: Throwable;
+  from: Point;
+  to: Point;
+  seconds: number;
+  /** Height of the arc in sprite px. */
+  arc: number;
+  land: 'splat' | 'drop' | 'past';
+  /** Ground line (screen px) where dropped things come to rest. */
+  floor: number;
+}
+
+/** The whole screen's colour for a moment: red while they fight, grey while they sulk, warm when they make up. */
+export type ScreenTone = 'angry' | 'sulk' | 'love';
 
 /** What an activity may ask of the world. Implemented by the world runtime (and by tests). */
 export interface Stage {
@@ -18,7 +43,13 @@ export interface Stage {
   /** Optional: where an activity happens in the current scene (the bed, the table…). */
   spot?(activity: string): { x: number; y: number } | null;
   /** Optional: nudge a character's mood (the world implements it; tests may not). */
-  mood?(actor: Actor, cause: 'comforted'): void;
+  mood?(actor: Actor, cause: 'comforted' | 'fought' | 'made-up'): void;
+  /** Optional (fights): fly a thing through the air. Timing stays with the caller. */
+  toss?(t: Toss): void;
+  /** Optional: tint the whole screen for a while. */
+  screen?(tone: ScreenTone, seconds: number): void;
+  /** Optional: a short screen shake (strength in sprite px). */
+  shake?(power: number, seconds?: number): void;
 }
 
 export interface Ctx {
@@ -36,7 +67,7 @@ export interface Step {
   update(ctx: Ctx, dt: number): boolean;
 }
 
-export type MomentId = 'wave-at' | 'gift' | 'glance' | 'comfort';
+export type MomentId = 'wave-at' | 'gift' | 'glance' | 'comfort' | 'fight';
 
 /** The partner's comfort lands: mood goes up. */
 export const cheerUp = (): Step => ({
@@ -302,6 +333,7 @@ export class ActivityRunner {
 
   finish(): void {
     for (const a of [this.ctx.initiator, this.ctx.partner]) {
+      a.hidden = false;
       if (a.mode === 'activity') a.mode = 'free';
       if (a.mode !== 'dragged') a.stop('idle');
     }

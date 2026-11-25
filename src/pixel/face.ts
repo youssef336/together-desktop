@@ -17,6 +17,7 @@ export function drawFace(buf: PixelBuffer, a: Appearance, l: Layout, p: Pose): v
   drawDetails(buf, a, y, p);
   drawEyes(buf, a, y, p);
   if (p.eyes === 'sad') drawSadBrows(buf, a, y);
+  else if (p.eyes === 'angry' || p.eyes === 'hurt') drawAngryBrows(buf, a, y);
   else drawBrows(buf, a, y);
   drawNose(buf, a, y);
   drawMouth(buf, a, y, p);
@@ -28,6 +29,11 @@ function drawEyes(buf: PixelBuffer, a: Appearance, hy: number, p: Pose): void {
     const x = ex + p.look;
     if (p.eyes === 'closed') {
       buf.span(x, x + 1, hy + 5, LINE);
+      continue;
+    }
+    if (p.eyes === 'hurt') {
+      // Squeezed shut: > <
+      buf.points(i === 0 ? [[0, 3], [1, 4], [0, 5]] : [[1, 3], [0, 4], [1, 5]], LINE, ex, hy);
       continue;
     }
     if (p.eyes === 'happy') {
@@ -90,6 +96,13 @@ function drawSadBrows(buf: PixelBuffer, a: Appearance, hy: number): void {
   buf.points([[10, 0], [11, -1], [17, 0], [16, -1]], c, 0, row);
 }
 
+/** Cross brows (inner ends down), dark and thick so they read at any brow style. */
+function drawAngryBrows(buf: PixelBuffer, a: Appearance, hy: number): void {
+  const row = a.eyeSize === 2 ? hy + 2 : hy + 3;
+  const c = a.eyebrows === 'none' ? LINE : shade(a.hairColor, -0.25);
+  buf.points([[9, -1], [10, -1], [11, 0], [16, 0], [17, -1], [18, -1]], c, 0, row);
+}
+
 function drawNose(buf: PixelBuffer, a: Appearance, hy: number): void {
   const c = shade(a.skin, -0.2);
   if (a.nose === 'dot') buf.px(13, hy + 6, c);
@@ -103,6 +116,15 @@ function drawMouth(buf: PixelBuffer, a: Appearance, hy: number, p: Pose): void {
   const y = hy + 7;
   if (p.mouth === 'sad') {
     buf.points([[12, 1], [13, 0], [14, 0], [15, 1]], MOUTH, 0, y);
+    return;
+  }
+  if (p.mouth === 'grit') {
+    // Clenched teeth.
+    buf.span(12, 15, y, MOUTH);
+    buf.span(12, 15, y + 1, WHITE);
+    buf.px(11, y + 1, MOUTH);
+    buf.px(16, y + 1, MOUTH);
+    buf.px(13, y + 1, shade(WHITE, -0.25));
     return;
   }
   if (p.mouth === 'open') {

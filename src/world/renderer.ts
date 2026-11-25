@@ -21,6 +21,7 @@ export class Renderer {
   readonly extraHit = new Map<string, HitRect[]>();
   /** True while a game wants every click in the window. */
   captureAll = false;
+  private offset = { x: 0, y: 0 };
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -43,6 +44,13 @@ export class Renderer {
     this.dirty = true;
   }
 
+  /** Screen shake: moves the canvas itself, so dirty rects and hitboxes stay put. */
+  setOffset(o: { x: number; y: number }): void {
+    if (o.x === this.offset.x && o.y === this.offset.y) return;
+    this.offset = { ...o };
+    this.canvas.style.transform = o.x || o.y ? `translate(${o.x}px, ${o.y}px)` : '';
+  }
+
   render(): void {
     if (!this.dirty) return;
     this.dirty = false;
@@ -54,22 +62,46 @@ export class Renderer {
     const s = world.scale;
 
     if (!world.settings?.hidden) {
+      if (world.screenFx.active) {
+        // The tint covers the whole screen (under everything); it never takes clicks.
+        ctx.clearRect(0, 0, this.view.w, this.view.h);
+        const shown = world.actors.filter((a) => !a.hidden);
+        const focus = shown.length ? { x: shown.reduce((t, a) => t + a.x, 0) / shown.length, y: Math.min(...shown.map((a) => a.y)) - 20 * s } : null;
+        world.screenFx.draw(ctx, this.view, focus, world.time);
+        drawn.push({ x: 0, y: 0, w: this.view.w, h: this.view.h });
+      }
       const sceneBox = world.game ? null : world.scene.draw(ctx, world.time);
       if (sceneBox) {
         drawn.push(pad(sceneBox, 2));
         hits.push(sceneBox);
       }
-      const actors = [...world.actors].sort((a, b) => a.y - b.y);
+      const actors = [...world.actors].filter((a) => !a.hidden).sort((a, b) => a.y - b.y);
       for (const a of actors) {
         const frame = a.animator.frame();
         const look = a.look !== 0 ? a.look : frame.pose.look;
         drawn.push(pad(drawCharacter(ctx, a.character.appearance, frame, a.x, a.y, s, a.facing, { look }), 2));
         hits.push(bodyBox(a.x, a.y - (frame.lift ?? 0) * s, s, frame.lie));
       }
+      for (const t of world.projectiles.items) {
+        const img = bitmapCanvas(t.item);
+        const ps = Math.max(2, Math.round(s * 0.85));
+        const w = img.width * ps;
+        const h = img.height * ps;
+        ctx.save();
+        ctx.globalAlpha = t.alpha;
+        ctx.imageSmoothingEnabled = false;
+        ctx.translate(Math.round(t.x), Math.round(t.y));
+        ctx.rotate(t.angle);
+        ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        ctx.restore();
+        const r = Math.hypot(w, h) / 2;
+        drawn.push(pad({ x: t.x - r, y: t.y - r, w: 2 * r, h: 2 * r }, 2));
+      }
       for (const p of world.particles.items) {
         const img = bitmapCanvas(p.bmp);
-        const alpha = Math.min(1, (p.ttl - p.age) / 0.5);
-        const ps = Math.max(2, Math.round(s * 0.75));
+        const alpha = Math.min(1, (p.ttl - p.age) / (p.pop ? 0.15 : 0.5));
+        const grow = p.pop ? Math.min(1, 0.4 + (p.age / 0.15) * 0.6) : 1;
+        const ps = Math.max(2, Math.round(s * 0.75 * p.size * grow));
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.imageSmoothingEnabled = false;
@@ -80,7 +112,8 @@ export class Renderer {
       }
       if (world.game?.draw) drawn.push(...world.game.draw(ctx));
       const bubbles: Box[] = [];
-      for (const a of actors) {
+      // A bubble still shows from inside the dust cloud (the cursing has to be seen).
+      for (const a of [...world.actors].sort((p, q) => p.y - q.y)) {
         if (!a.bubble) continue;
         const frame = a.animator.frame();
         const top = frame.lie ? a.y - 18 * s : a.y - (frame.lift ?? 0) * s - 36 * s;
@@ -113,7 +146,7 @@ export class Renderer {
 
   hitTest(x: number, y: number): string | null {
     const s = this.world.scale;
-    const actors = [...this.world.actors].sort((a, b) => b.y - a.y);
+    const actors = [...this.world.actors].filter((a) => !a.hidden).sort((a, b) => b.y - a.y);
     for (const a of actors) {
       const f = a.animator.frame();
       const b = bodyBox(a.x, a.y - (f.lift ?? 0) * s, s, f.lie);

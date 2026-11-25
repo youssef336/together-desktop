@@ -47,6 +47,33 @@ export const DEMO_B: Appearance = {
   detail: 'blush',
 };
 
+/** Malouka — Bello's queen: twin tails, a little gold crown, a rose-red dress. */
+export const MALOUKA: Appearance = {
+  ...BASE_APPEARANCE,
+  faceShape: 'round',
+  skin: '#f0c09a',
+  eyeShape: 'sparkle',
+  eyeSize: 2,
+  eyebrows: 'arched',
+  nose: 'button',
+  mouth: 'cat',
+  hairStyle: 'twin-tails',
+  hairLength: 'long',
+  hairColor: '#3b2520',
+  bodyShape: 'slim',
+  height: 'short',
+  top: 'dress',
+  topColor: '#e8707f',
+  bottom: 'none',
+  shoes: 'boots',
+  shoeColor: '#f6f1e9',
+  hat: 'crown',
+  hatColor: '#f2c94c',
+  jewelry: 'earrings',
+  jewelryColor: '#f2c94c',
+  detail: 'blush',
+};
+
 export interface Template {
   id: string;
   label: string;
@@ -55,6 +82,7 @@ export interface Template {
 
 export const TEMPLATES: Template[] = [
   { id: 'bello', label: 'Bello ✦', appearance: BELLO },
+  { id: 'malouka', label: 'Malouka 👑', appearance: MALOUKA },
   { id: 'blank', label: 'Blank base', appearance: BASE_APPEARANCE },
   { id: 'flower', label: 'Flower & dress', appearance: DEMO_B },
   {

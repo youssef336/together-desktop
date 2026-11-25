@@ -12,6 +12,7 @@ import {
   walkTogether,
   wait,
 } from './activity';
+import { buildFight } from './fight';
 
 // Each activity is a small state machine built from steps — never a bag of random animation calls.
 
@@ -152,5 +153,11 @@ export const MOMENTS: ActivityDef[] = [
       say('partner', 'Thank you... ❤️'),
       wait(1.2),
     ],
+  },
+  {
+    // Rare and sudden. Always ends with making up (engine/fight.ts).
+    id: 'fight', label: 'Fight & make up', emoji: '😤', cooldown: 1200,
+    description: 'Out of nowhere they fight — things fly across the room — sulk, and one comes back to say sorry.',
+    build: buildFight,
   },
 ];
