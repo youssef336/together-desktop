@@ -40,7 +40,7 @@ Give them a little room on your desktop: bedroom, coffee shop, park, beach, rain
 - **Library**: characters (duplicate, export/import as JSON, delete), animation library previewed on any character, multiple couples with a switch.
 - **Private by default**: no account, no network, no analytics. Data is one SQLite file on your machine.
 
-Not built yet (see [TASKS.md](TASKS.md)): scenes, imported PNG/GIF/sprite-sheet characters, optional AI dialogue, special dates (birthday/anniversary), custom global shortcuts.
+Not built yet (see [TASKS.md](TASKS.md)): imported PNG/GIF/sprite-sheet characters, optional AI dialogue, special dates (birthday/anniversary), custom global shortcuts.
 
 ## Run it
 
@@ -74,7 +74,9 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design, [DEVELOPM
 Every version tag (`v0.2.0`, …) builds installers on GitHub (Windows + macOS) and publishes them on the repo's **Releases** page — send your friends that link.
 
 - **Windows 10/11:** download the `.exe` setup and run it. SmartScreen may say “Windows protected your PC” because the app is not code-signed yet → **More info → Run anyway**.
-- **macOS:** download the `.dmg`, drag *Together Desktop* to Applications, then the first time **right-click it → Open → Open** (not notarized yet).
+- **macOS:** download the `.dmg`, drag *Bello Together* to Applications, then the first time **right-click it → Open → Open** (not notarized yet).
+
+**Can't see them after installing?** The couple lives on your desktop work area (above the taskbar / below the menu bar), not in a normal window. Look for the Bello Together icon in the tray (Windows) or menu bar (macOS) and choose *Open* or *Show*. Closing the main window keeps them on the desktop, and right-clicking a character opens the full menu.
 
 Everyone creates their own couple; nothing is shared between computers. To send someone *your* characters, use **My Characters → Export** and they **Import** the file.
 
