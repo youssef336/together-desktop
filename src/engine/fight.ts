@@ -164,7 +164,7 @@ const brawlRound = (): Step =>
           mid = apart(st, mid, st.px(10)).reduce((s, x) => s + x, 0) / 2;
           a.walkTo(mid - dirTo(a, b) * st.px(5), a.y, { run: true, then: 'angry' });
           b.walkTo(mid + dirTo(a, b) * st.px(5), b.y, { run: true, then: 'angry' });
-          st.say(a, 'RAAAH!');
+          st.say(a, 'آآآآه!');
         },
         until: () => a.arrived && b.arrived,
         max: 6,
@@ -263,7 +263,7 @@ const pillowRound = (): Step =>
           const [l, r] = apart(st, (a.x + b.x) / 2, st.px(15));
           a.walkTo(a.x <= b.x ? l : r, a.y, { run: true, then: 'windup' });
           b.walkTo(a.x <= b.x ? r : l, b.y, { run: true, then: 'windup' });
-          st.say(b, 'PILLOW FIGHT!!');
+          st.say(b, 'حرب مخدات!!');
         },
         until: () => a.arrived && b.arrived,
         max: 6,
@@ -328,10 +328,10 @@ const sulk = (): Step =>
           st.screen?.('sulk', 120);
           st.effect('heartbreak', (a.x + b.x) / 2, Math.min(a.y, b.y) - st.px(40), 1);
           storms();
-          st.say(a, 'Hmph!');
+          st.say(a, 'هممف!');
         },
       },
-      { wait: 1.3, do: () => st.say(b, 'Hmph!!') },
+      { wait: 1.3, do: () => st.say(b, 'هممف!!') },
       { wait: 2.6, do: () => st.say(st.rnd() < 0.5 ? a : b, pickLine(SULK, st.rnd)) },
       // Both peek at the same time, get caught, and snap back.
       { wait: 2.2, do: () => (a.faceTowards(b), b.faceTowards(a), a.stop('surprise'), b.stop('surprise')) },

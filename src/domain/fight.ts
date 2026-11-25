@@ -2,44 +2,44 @@
 // Kept silly on purpose: a fight here is a cartoon, never cruel, and it always ends in a hug.
 
 export const SPARK = [
-  '{you}!! You ate my fries?!',
-  'Did you just finish the series WITHOUT me?!',
-  'Who left the cup on the table AGAIN?',
-  "You said I look 'fine'?! FINE?!",
-  'That was MY slipper, {you}!',
-  'Stop stealing the blanket!',
-  'You liked her photo?! 😤',
-  'You forgot what day it is, didn’t you?!',
-  'Why is my charger in YOUR bag?!',
-  'You told me you were "5 minutes away" an HOUR ago!',
+  'يا {you}!! إنت كلت البطاطس بتاعتي؟!',
+  'إنت كملت المسلسل من غيري؟!',
+  'مين ساب الكوباية على الترابيزة تاني؟!',
+  'قلتلي شكلي "عادي"؟! عادي؟!',
+  'ده الشبشب بتاعي يا {you}!',
+  'بطّل تشد البطانية كلها!',
+  'إنت عامل لايك على صورتها؟! 😤',
+  'إنت ناسي النهارده إيه، صح؟!',
+  'الشاحن بتاعي بيعمل إيه في شنطتك؟!',
+  'قلتلي "خمس دقايق وجاي" من ساعة!',
 ] as const;
 
-export const RETORT = ['Excuse me?!', "Oh, it's ON.", 'Say that again!', 'YOU started it!', 'Wow. Just wow.', 'Ohhh you did NOT.'] as const;
+export const RETORT = ['نعم يا أخويا؟!', 'آه كده بقى؟ ماشي.', 'قولها تاني كده!', 'إنت اللي بدأت!', 'لا ده إنت زودتها.', 'إنت متأكد من اللي بتقوله؟!'] as const;
 
-export const OUCH = ['OW!', 'Hey!!', 'OUCH!', "That's it!", 'You’ll pay for that!', 'Not the face!'] as const;
+export const OUCH = ['آآآه!', 'إيه ده!!', 'آي!', 'كده؟! ماشي!', 'هتدفع التمن!', 'مش في الوش!'] as const;
 
-export const TAUNT = ['Missed me! 😜', 'Too slow!', 'Ha! Nope!', 'Is that all? 😏'] as const;
+export const TAUNT = ['مجتش فيا! 😜', 'بطيء أوي!', 'هاها! لأ!', 'هو ده آخرك؟ 😏'] as const;
 
-export const THROW_CALL = ['Catch THIS!', 'Take that!', 'Incoming!', 'Heads up!'] as const;
+export const THROW_CALL = ['خد دي!', 'استلم!', 'حاسب!', 'جاتلك أهي!'] as const;
 
-export const CHASE_CALL = ['Come HERE! 🩴', 'Don’t you run from me!', 'You can run but you can’t hide!'] as const;
+export const CHASE_CALL = ['تعالى هنا! 🩴', 'متجريش مني!', 'هتروح مني فين؟!'] as const;
 
-export const FLEE_CALL = ['Nooo! 😱', 'Help!!', "I'm sorry I'm sorry!"] as const;
+export const FLEE_CALL = ['لأأأ! 😱', 'الحقوني!!', 'آسف آسف آسف!'] as const;
 
 /** Grawlix: cartoon cursing from inside the dust cloud. */
 export const GRAWLIX = ['#@$%!', '*&%#!!', '@#!*%', '!!$#&@'] as const;
 
-export const SULK = ['Hmph!', 'Not talking to you.', 'Whatever 😤', "I'm not looking at you.", '...', 'Fine. FINE.'] as const;
+export const SULK = ['هممف!', 'مش بكلمك.', 'براحتك 😤', 'مش هبصلك.', '...', 'خلاص. خلاص بقى.'] as const;
 
-export const SORRY = ["I'm sorry... 🥺", 'Hey… I was wrong.', 'Can we stop fighting?', 'I brought you this 🌹'] as const;
+export const SORRY = ['أنا آسف... 🥺', 'بص… أنا غلطان.', 'خلاص بقى، كفاية خناق؟', 'جبتلك دي 🌹'] as const;
 
-export const REFUSE = ['Hmph.', 'No.', 'Go away.', '...still mad.', "I'm not listening 🙉"] as const;
+export const REFUSE = ['هممف.', 'لأ.', 'امشي.', '...لسه زعلان.', 'مش سامع 🙉'] as const;
 
-export const RETRY = ['Pleeease? 🥺', "I'll buy you fries 🍟", 'You can pick the movie…', 'Look, a silly face! 🤪', "I'll do the dishes. For a WEEK."] as const;
+export const RETRY = ['عشان خاطري؟ 🥺', 'هجيبلك بطاطس 🍟', 'إنت اللي تختار الفيلم…', 'بص الوش ده! 🤪', 'هغسل المواعين. أسبوع كامل.'] as const;
 
-export const SOFTEN = ['...fine.', 'Okay. Come here.', "You're lucky I love you.", "Only because you're cute.", 'Ugh… I missed you.'] as const;
+export const SOFTEN = ['...ماشي.', 'طب تعالى.', 'إنت محظوظ إني بحبك.', 'عشان إنت كيوت بس.', 'أوف… وحشتني.'] as const;
 
-export const MADE_UP = ['I love you, silly ❤️', 'Never again? …until tomorrow 😂', 'Friends again? ❤️', 'Best couple ever ✨'] as const;
+export const MADE_UP = ['بحبك يا مجنون ❤️', 'مش هنتخانق تاني؟ …لحد بكرة 😂', 'صافي يا لبن؟ ❤️', 'أحلى اتنين في الدنيا ✨'] as const;
 
 export function pickLine(lines: readonly string[], rnd: () => number, you = ''): string {
   return lines[Math.floor(rnd() * lines.length)]!.replaceAll('{you}', you);
