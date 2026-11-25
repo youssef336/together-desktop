@@ -66,6 +66,22 @@ export const world = {
   hide: () => safeInvoke<void>('world_hide'),
   /** Keyboard focus for games (the world never takes focus otherwise). */
   focus: () => safeInvoke<void>('world_focus'),
+  /** Mischief: moves the real mouse cursor to a point in world CSS px. */
+  moveCursor: (x: number, y: number) => safeInvoke<void>('world_set_cursor', { x, y }),
+  /**
+   * Mischief: closes the front tab (⌘W / Ctrl+W) only when a browser is the front app.
+   * Resolves `closed`, `skip:<app>`, or `denied` (macOS has not allowed it yet / it failed).
+   */
+  closeTab: async (): Promise<'closed' | 'denied' | `skip:${string}`> => {
+    if (!isTauri()) return 'skip:browser preview';
+    try {
+      const r = await invoke<string>('world_close_tab');
+      return r === 'closed' || r.startsWith('skip:') ? (r as 'closed' | `skip:${string}`) : 'denied';
+    } catch (e) {
+      console.error('[bridge] world_close_tab failed', e);
+      return 'denied';
+    }
+  },
   /** Dev only: prints to the `tauri dev` terminal. */
   log: (msg: string) => (import.meta.env.DEV ? safeInvoke<void>('world_log', { msg }) : Promise.resolve(undefined)),
 };

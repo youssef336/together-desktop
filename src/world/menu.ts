@@ -1,4 +1,5 @@
 import type { ActivityId } from '../domain/personality';
+import { isNaughty, type MischiefPace, type MischiefPrefs, mischiefOf, PACE_LABEL } from '../domain/mischief';
 import { ACTIVITIES } from '../engine/activities';
 import type { Actor } from '../engine/actor';
 import type { ClipId } from '../engine/clips';
@@ -91,6 +92,20 @@ export class ContextMenu {
       sep();
       for (const s of SOLO) item(s.label, () => actor.animator.play(s.clip, { force: true }));
       sep();
+      sub('😈  Mischief', () => {
+        const prefs = mischiefOf(w.settings, actor.id);
+        const set = (patch: Partial<MischiefPrefs>) => this.setMischief(actor, { ...prefs, ...patch });
+        item('Grab my mouse and run', () => set({ grab: !prefs.grab }), { checked: prefs.grab });
+        item('Close my browser tab', () => set({ tab: !prefs.tab }), { checked: prefs.tab });
+        sep();
+        for (const pace of Object.keys(PACE_LABEL) as MischiefPace[]) {
+          item(PACE_LABEL[pace], () => set({ pace }), { checked: prefs.pace === pace });
+        }
+        if (isNaughty(prefs)) {
+          sep();
+          item('Do it now! 😈', () => void w.mischief.start(actor));
+        }
+      });
       item('✏️  Rename…', () => void this.talk?.rename(actor));
       item('Edit character…', () => void openMain(`editor:${actor.id}`));
       item('Change couple…', () => void openMain('couple'));
@@ -120,6 +135,11 @@ export class ContextMenu {
     el.appendChild(credit);
     el.hidden = false;
     this.reposition(x, y);
+  }
+
+  private setMischief(actor: Actor, prefs: MischiefPrefs): void {
+    const w = this.w;
+    void w.patchSettings({ mischief: { ...w.settings.mischief, [actor.id]: prefs } }).then(() => w.syncCursorFeed());
   }
 
   private reposition(x: number, y: number): void {

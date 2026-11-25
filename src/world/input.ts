@@ -50,6 +50,7 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
     if (w.game) return; // bubble games: the desktop under the characters stays as it is
     menu.close();
     const actor = actorAt(e.clientX, e.clientY);
+    if (w.mischief.pointerDown(actor)) return; // a tug on a stolen mouse, or catching a prankster
     if (!actor) {
       if (!w.scene.contains(e.clientX, e.clientY) && !w.scene.handleAt(e.clientX, e.clientY)) return;
       // Press inside the scene: a click uses the object under it; a drag moves the scene;
@@ -201,6 +202,7 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
     e.preventDefault();
     if (w.game) return;
     const actor = actorAt(e.clientX, e.clientY);
+    if (w.mischief.pointerDown(actor)) return;
     if (actor) menu.open(actor, e.clientX, e.clientY, 'full');
   });
 

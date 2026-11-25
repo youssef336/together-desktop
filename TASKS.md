@@ -88,6 +88,12 @@ Legend: `[x]` done and verified · `[~]` done, not yet verified on every platfor
 - [ ] Characters scale with the scene (option)
 - [ ] Seasonal scenes (Halloween, winter)
 
+## Mischief
+- [x] Per-character opt-in (right-click → Mischief, Settings card), pace rare / sometimes / often, "Do it now!"
+- [x] Grab the mouse: sneak, grab, run with the real cursor, tug clicks to release, taunt pauses, 12 s cap; partner scolds or cheers
+- [x] Close the browser tab: climb, warn 2.5 s (click to cancel), ⌘W / Ctrl+W only when a browser is in front
+- [ ] Verified on macOS + Windows (cursor warp, Accessibility prompt, PowerShell SendKeys)
+
 ## Phase 9 — Settings & optimisation
 - [x] Size, bubble time, mouse reactions, lock, pause, hide, low-performance, delete all data
 - [x] Adaptive frame rate, dirty-rect rendering, sprite cache

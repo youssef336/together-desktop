@@ -1,4 +1,5 @@
 import type { Appearance } from './appearance';
+import type { MischiefPrefs } from './mischief';
 import type { ActivityId, Personality, Preferences } from './personality';
 
 export interface Character {
@@ -119,6 +120,8 @@ export interface WorldSettings {
   /** Scene top-left as fractions of the screen (set by dragging it). Null = use scenePos. */
   sceneX: number | null;
   sceneY: number | null;
+  /** Per-character mischief (grab the mouse, close a tab). Missing = off. See domain/mischief.ts. */
+  mischief: Record<string, MischiefPrefs>;
 }
 
 export const DEFAULT_SETTINGS: WorldSettings = {
@@ -142,6 +145,7 @@ export const DEFAULT_SETTINGS: WorldSettings = {
   sceneScale: null,
   sceneX: null,
   sceneY: null,
+  mischief: {},
 };
 
 export interface WorldEvent {

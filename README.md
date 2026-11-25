@@ -8,6 +8,15 @@ Design yourself and your partner as pixel characters, then let them live on your
 
 *Each row is a different character, each column a pose (idle, breathing, walking, waving, cheering, hugging, holding a cup, sipping, sitting, surprised). None of it is a static image: the art is generated from the character's parts, so every animation fits every design.*
 
+## New — 😈 Mischief (opt-in, per character)
+
+Switch it on for one of them (right-click → **Mischief**, or **Settings → Mischief**) and now and then they tease you:
+
+- **Grab your mouse**: they sneak up on the cursor, grab it and run around the screen with it. Your clicks don't reach the desktop while they hold it — click them 2–4 times (more for playful ones) to get it back. Sometimes they stop to taunt you… and snatch it again. The partner notices: a kind one runs after them to scold, a playful one cheers them on.
+- **Close your tab**: they climb up and wave *“Bye bye, tab!”* — click them within 2.5 s to stop it, or ⌘W / Ctrl+W closes the front tab (only when a browser is the front app; ⌘⇧T brings it back). macOS asks once for permission.
+- Pace: rarely (~20 min), sometimes (~8 min), often (~3 min), or **Do it now!** from the menu.
+- Safety: off by default; they never hold the mouse more than 12 s; pausing or hiding them (tray) ends any prank at once.
+
 ## New in v0.3 — scenes
 
 ![The eight scenes](docs/scenes.png)

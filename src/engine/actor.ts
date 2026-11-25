@@ -3,7 +3,8 @@ import { walkSpeed } from '../domain/personality';
 import { Animator } from './animator';
 import type { ClipId } from './clips';
 
-export type ActorMode = 'free' | 'activity' | 'dragged';
+/** `mischief` = busy teasing you (world/mischief.ts moves them; free behaviour leaves them alone). */
+export type ActorMode = 'free' | 'activity' | 'dragged' | 'mischief';
 
 export interface Bubble {
   text: string;
@@ -67,7 +68,7 @@ export class Actor {
 
   /** Moves toward the target. `scale` converts sprite speed to screen px. Returns true if it moved. */
   move(dt: number, scale: number): boolean {
-    if (!this.target || this.mode === 'dragged') return false;
+    if (!this.target || this.mode === 'dragged' || this.mode === 'mischief') return false;
     const dx = this.target.x - this.x;
     const dy = this.target.y - this.y;
     const dist = Math.hypot(dx, dy);
