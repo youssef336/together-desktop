@@ -1,4 +1,5 @@
 import type { Game, GameDef, GameHost } from './types';
+import { L } from '../../domain/speech';
 
 const HANDS = [
   { id: 'rock', label: '✊', beats: 'scissors' },
@@ -39,10 +40,10 @@ class RpsVsYou implements Game {
     const { player, world, choice } = this.h;
     const teasing = player.character.personality.playfulness > 60;
     while (!this.stopped && this.score < 2 && this.theirs < 2) {
-      const pick = await choice.ask(player, 'Rock, paper, scissors…', HANDS.map((h) => ({ label: h.label, value: h.id })), 15);
+      const pick = await choice.ask(player, L('Rock, paper, scissors…', 'حجرة، ورقة، مقص…'), HANDS.map((h) => ({ label: h.label, value: h.id })), 15);
       if (this.stopped) return;
       if (pick === null) {
-        world.say(player, 'Hello? 👀');
+        world.say(player, L('Hello? 👀', 'ألو؟ 👀'));
         this.over = true;
         return;
       }
@@ -52,15 +53,15 @@ class RpsVsYou implements Game {
       const yours = HANDS.find((h) => h.id === pick)!;
       if (mine.id === yours.id) {
         player.animator.play('surprise', { force: true });
-        world.say(player, `${mine.label} Tie! Again!`);
+        world.say(player, `${mine.label} ${L('Tie! Again!', 'تعادل! تاني!')}`);
       } else if (mine.beats === yours.id) {
         this.theirs++;
         player.animator.play('cheer', { force: true });
-        world.say(player, `${mine.label} ${teasing ? 'Too easy 😏' : 'I win this one!'}`);
+        world.say(player, `${mine.label} ${teasing ? L('Too easy 😏', 'سهلة أوي 😏') : L('I win this one!', 'الجولة دي ليا!')}`);
       } else {
         this.score++;
         player.animator.play('pout', { force: true });
-        world.say(player, `${mine.label} Nooo! 😤`);
+        world.say(player, `${mine.label} ${L('Nooo! 😤', 'لأأأ! 😤')}`);
       }
       await this.wait(1.8);
     }

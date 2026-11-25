@@ -8,13 +8,18 @@ Design yourself and your partner as pixel characters, then let them live on your
 
 *Each row is a different character, each column a pose (idle, breathing, walking, waving, cheering, hugging, holding a cup, sipping, sitting, surprised). None of it is a static image: the art is generated from the character's parts, so every animation fits every design.*
 
+## New — 🗣 English or Egyptian
+
+Choose what they speak in their bubbles: **English** or **مصري** (Settings → *They speak*, or right-click → More… → 🗣). It covers everything they say: chats, the questions they ask you, games, mischief and fights. Your own lines stay as you wrote them; the rest of the app stays in English.
+
 ## New — 😤 Fight & make up
 
 Every now and then, out of nowhere, one of them snaps (*«إنت كلت البطاطس بتاعتي؟!»*) and it's on — then they make up. Each fight is different:
 
 - **Two or three rounds**, picked at random, always including one where they **throw things at each other from across the room**: slippers, pillows, tomatoes, books, the remote, a banana, a pie, a sock. Some hit (POW, splat, feathers), some get dodged and fly past and land on the floor, where they lie for a few seconds.
 - The other rounds: **fists up** (punch, dodge, counter-punch), a **cartoon dust-cloud brawl** (fists, stars and cursing `#@$%!` come out of it, then they sit there dizzy), a **slipper chase** back and forth, a **pillow fight**.
-- Everything they say in a fight is in Egyptian Arabic.
+- **Like an arcade fighting game**: health bars with their names at the top of the screen, *ROUND 1 … FIGHT!* before each round, the bars drop with every hit, some big hits land in slow motion with a white flash, and it ends in **K.O.!** (nobody wins). When they make up, their names light up in gold: **BELLO ♥ MALOUKA**.
+- Malouka's signature move: her first throw is always the flying slipper 🩴.
 - **The sulk**: backs turned, arms crossed, a storm cloud over each head. They both peek at the same moment… and snap back.
 - **Making up**: one of them (the more affectionate one, usually) comes back, hesitates halfway, says sorry with a rose. The other stays cross for a while (*«هممف.»*), peeks, refuses again, and finally gives in.
 - **The screen changes with them**: a red glow at the edges while they fight, grey while they sulk, and when they hug it turns warm pink-gold, and hearts and stars rise from above them.

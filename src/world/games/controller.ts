@@ -1,4 +1,5 @@
 import { newId } from '../../domain/models';
+import { L } from '../../domain/speech';
 import { store } from '../../data/store';
 import { world as native } from '../../platform/bridge';
 import type { ChoiceBubble } from '../choice';
@@ -131,16 +132,16 @@ export class GameController {
       if (record) {
         player.animator.play('cheer', { force: true });
         w.effect('hearts', player.x, player.y - w.px(38), 2.5);
-        w.say(player, `New record! ${score} ${def.unit} 🎉`);
+        w.say(player, L(`New record! ${score} ${def.unit} 🎉`, `رقم قياسي! ${score} 🎉`));
         if (partner) {
           partner.animator.play('dance', { force: true, then: 'idle' });
           window.setTimeout(() => partner.animator.play('idle', { force: true }), 2500);
         }
       } else if (id === 'rps') {
-        w.say(player, theyWonRps ? 'I win! Rematch anytime 😏' : 'You won... rematch!! 😤');
+        w.say(player, theyWonRps ? L('I win! Rematch anytime 😏', 'كسبت! ماتش تاني وقت ما تحب 😏') : L('You won... rematch!! 😤', 'كسبت... ماتش تاني!! 😤'));
         player.animator.play(theyWonRps ? 'cheer' : 'pout', { force: true });
       } else {
-        w.say(player, `${score} ${def.unit}! ${score >= best * 0.8 ? 'So good!' : 'Again?'}`);
+        w.say(player, `${L(`${score} ${def.unit}!`, `${score}!`)} ${score >= best * 0.8 ? L('So good!', 'حلو أوي!') : L('Again?', 'تاني؟')}`);
         player.animator.play('happy', { force: true });
       }
       for (const a of w.actors) w.mood(a, record ? 'game-record' : id === 'rps' && !theyWonRps && a === player ? 'game-lost' : 'game-played');

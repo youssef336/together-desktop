@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { BASE_APPEARANCE, randomizeAppearance } from '../domain/appearance';
-import { fillTokens, pickExchange } from '../domain/dialogue';
+import { ACTIVITY_LINES, ACTIVITY_LINES_EG, BUILT_IN, BUILT_IN_EG, fillTokens, pickExchange } from '../domain/dialogue';
+import { localize, QUESTIONS } from '../domain/questions';
+import { setSpeechLang } from '../domain/speech';
+import * as fightLines from '../domain/fight';
 import { isNaughty, mischiefOf, nextPrankIn, pickPrank, tugsToRelease } from '../domain/mischief';
 import { DEFAULT_SETTINGS } from '../domain/models';
 import { createCharacter, createCouple, exportCharacter, importCharacter } from '../domain/factory';
@@ -164,6 +167,29 @@ describe('activities', () => {
   }
 });
 
+describe('speech: English and Egyptian', () => {
+  it('has an Egyptian line for every English one', () => {
+    for (const k of Object.keys(BUILT_IN) as (keyof typeof BUILT_IN)[]) expect(BUILT_IN_EG[k].length, k).toBe(BUILT_IN[k].length);
+    for (const k of Object.keys(ACTIVITY_LINES)) expect(ACTIVITY_LINES_EG[k]?.length, k).toBe(ACTIVITY_LINES[k]!.length);
+    for (const [k, v] of Object.entries(fightLines)) {
+      if (v && typeof v === 'object' && 'en' in v && 'eg' in v) expect((v as { eg: readonly unknown[] }).eg.length, k).toBe((v as { en: readonly unknown[] }).en.length);
+    }
+  });
+  it('speaks the chosen language', () => {
+    setSpeechLang('en');
+    expect(pickExchange('greeting', { tone: 'calm', custom: [], disabled: [], recent: [], rnd: () => 0 })?.first).toBe('Hi {you}!');
+    expect(localize(QUESTIONS[0]!).text).toBe(QUESTIONS[0]!.text);
+    setSpeechLang('eg');
+    expect(pickExchange('greeting', { tone: 'calm', custom: [], disabled: [], recent: [], rnd: () => 0 })?.first).toBe('هاي يا {you}!');
+    for (const q of QUESTIONS) {
+      const eg = localize(q);
+      expect(eg.text, q.id).not.toBe(q.text);
+      expect(eg.options.length).toBe(q.options.length);
+      for (const o of eg.options) expect(o.reaction.say).toMatch(/[\u0600-\u06FF]/);
+    }
+  });
+});
+
 describe('Bello and Malouka', () => {
   const t = (id: string) => TEMPLATES.find((x) => x.id === id)!;
   it('picking their template names the character and locks the name', () => {
@@ -210,6 +236,7 @@ describe('fight', () => {
       const tones: string[] = [];
       const moods: string[] = [];
       let tossed = 0;
+      const huds: string[] = [];
       const said: string[] = [];
       const st: Stage = {
         scale: 3,
@@ -223,6 +250,9 @@ describe('fight', () => {
         screen: (t) => void (tones.at(-1) !== t && tones.push(t)),
         shake: () => {},
         mood: (_a, cause) => void moods.push(cause),
+        hud: (e) => void huds.push(e.kind),
+        flash: () => {},
+        slowmo: () => {},
       };
       const run = new ActivityRunner(def, { initiator: a, partner: b, stage: st });
       run.start();
@@ -244,6 +274,11 @@ describe('fight', () => {
       expect(done, `seed ${seed} stuck at ${run.stepName}`).toBe(true);
       expect(t).toBeLessThan(120);
       expect(tones).toEqual(['angry', 'sulk', 'love']);
+      // Health bars up, a banner per round, K.O., then the names in gold.
+      expect(huds[0]).toBe('start');
+      expect(huds.filter((k) => k === 'round').length).toBeGreaterThanOrEqual(2);
+      expect(huds.filter((k) => k === 'hit').length).toBeGreaterThanOrEqual(2);
+      expect(huds.filter((k) => k !== 'hit').slice(-2)).toEqual(['ko', 'love']);
       expect(moods.filter((m) => m === 'made-up')).toHaveLength(2);
       expect(tossed).toBeGreaterThanOrEqual(3);
       expect(said.length).toBeGreaterThan(8);

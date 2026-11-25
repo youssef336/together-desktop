@@ -1,5 +1,6 @@
 import type { Appearance } from './appearance';
 import type { MischiefPrefs } from './mischief';
+import type { SpeechLang } from './speech';
 import type { Signature } from './templates';
 import type { ActivityId, Personality, Preferences } from './personality';
 
@@ -105,6 +106,8 @@ export interface WorldSettings {
   locked: boolean;
   mouseReactions: boolean;
   bubbleSeconds: number;
+  /** What language they speak in their bubbles (domain/speech.ts). */
+  speech: SpeechLang;
   lowPerformance: boolean;
   monitorIndex: number;
   /** Saved spots per character, as fractions of the world size (survives monitor changes). */
@@ -138,6 +141,7 @@ export const DEFAULT_SETTINGS: WorldSettings = {
   locked: false,
   mouseReactions: true,
   bubbleSeconds: 4,
+  speech: 'eg',
   lowPerformance: false,
   monitorIndex: 0,
   positions: {},

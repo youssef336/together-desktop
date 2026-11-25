@@ -5,7 +5,7 @@ const FADE_OUT = 1.2;
 
 /** Edge colour and strength of each tone; the centre of the screen stays clear. */
 const TONE: Record<ScreenTone, { edge: string; wash: string; strength: number }> = {
-  angry: { edge: '224, 64, 64', wash: '224, 64, 64', strength: 0.26 },
+  angry: { edge: '224, 64, 64', wash: '224, 64, 64', strength: 0.36 },
   sulk: { edge: '70, 80, 115', wash: '70, 80, 115', strength: 0.3 },
   love: { edge: '255, 150, 185', wash: '255, 214, 150', strength: 0.34 },
 };
@@ -23,11 +23,13 @@ export class ScreenFx {
   /** Cross-fade from the previous tone. */
   private prevAlpha = 0;
   private shakeLeft = 0;
+  /** White impact flash, seconds left. */
+  private flashLeft = 0;
   private shakePower = 0;
   offset = { x: 0, y: 0 };
 
   get active(): boolean {
-    return this.tone !== null || this.prevAlpha > 0 || this.shakeLeft > 0;
+    return this.tone !== null || this.prevAlpha > 0 || this.shakeLeft > 0 || this.flashLeft > 0;
   }
 
   get current(): ScreenTone | null {
@@ -54,6 +56,10 @@ export class ScreenFx {
     this.offset = { x: 0, y: 0 };
   }
 
+  flash(): void {
+    this.flashLeft = 0.18;
+  }
+
   shake(power: number, seconds = 0.25): void {
     this.shakePower = Math.max(this.shakeLeft > 0 ? this.shakePower : 0, power);
     this.shakeLeft = Math.max(this.shakeLeft, seconds);
@@ -71,6 +77,7 @@ export class ScreenFx {
       this.t += dt;
       if (this.t >= this.dur) this.tone = null;
     }
+    if (this.flashLeft > 0) this.flashLeft = Math.max(0, this.flashLeft - dt);
     if (this.prevAlpha > 0) this.prevAlpha = Math.max(0, this.prevAlpha - dt / FADE_OUT);
     if (this.shakeLeft > 0) {
       this.shakeLeft -= dt;
@@ -83,6 +90,10 @@ export class ScreenFx {
   draw(ctx: CanvasRenderingContext2D, view: { w: number; h: number }, focus: { x: number; y: number } | null, time: number): void {
     if (this.prevTone && this.prevAlpha > 0) this.paint(ctx, view, this.prevTone, this.prevAlpha, focus, time);
     if (this.tone) this.paint(ctx, view, this.tone, this.alpha(), focus, time);
+    if (this.flashLeft > 0) {
+      ctx.fillStyle = `rgba(255, 255, 255, ${(this.flashLeft / 0.18) * 0.45})`;
+      ctx.fillRect(0, 0, view.w, view.h);
+    }
   }
 
   private paint(ctx: CanvasRenderingContext2D, view: { w: number; h: number }, tone: ScreenTone, a: number, focus: { x: number; y: number } | null, time: number): void {

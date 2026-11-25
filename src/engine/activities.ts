@@ -1,4 +1,5 @@
 import type { ActivityId } from '../domain/personality';
+import { L, pick } from '../domain/speech';
 import {
   type ActivityDef,
   effect,
@@ -126,9 +127,9 @@ export const MOMENTS: ActivityDef[] = [
       meet(13),
       faceEachOther(),
       effect('gift', 'between', 2.6),
-      say('initiator', 'For you 🎁'),
+      say('initiator', () => L('For you 🎁', 'دي عشانك 🎁')),
       play(null, 'surprise', 1),
-      say('partner', 'For me?!'),
+      say('partner', () => L('For me?!', 'ليا أنا؟!')),
       play('happy', 'happy', 1.4),
       effect('heart', 'partner', 1.5),
     ],
@@ -143,14 +144,14 @@ export const MOMENTS: ActivityDef[] = [
     build: ({ stage }) => [
       meet(11),
       faceEachOther(),
-      say('initiator', ["Hey... I'm here.", 'Come here, you.', "Don't be sad ❤️", 'Who made you sad? 😠'][Math.floor(stage.rnd() * 4)]!),
+      say('initiator', () => pick({ en: ["Hey... I'm here.", 'Come here, you.', "Don't be sad ❤️", 'Who made you sad? 😠'], eg: ['أنا هنا...', 'تعالى هنا.', 'متزعلش ❤️', 'مين زعلك؟ 😠'] }, stage.rnd)),
       wait(1.6),
       play('hug', 'hug', 0.1),
       effect('hearts', 'between', 3),
       wait(3),
       cheerUp(),
       play('happy', 'blush', 1.4),
-      say('partner', 'Thank you... ❤️'),
+      say('partner', () => L('Thank you... ❤️', 'شكرًا... ❤️')),
       wait(1.2),
     ],
   },

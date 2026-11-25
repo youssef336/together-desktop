@@ -1,5 +1,6 @@
 import type { ActivityId } from '../domain/personality';
 import { isNaughty, type MischiefPace, type MischiefPrefs, mischiefOf, PACE_LABEL } from '../domain/mischief';
+import { SPEECH_LABEL, SPEECH_LANGS } from '../domain/speech';
 import { isNameLocked } from '../domain/templates';
 import { ACTIVITIES } from '../engine/activities';
 import type { Actor } from '../engine/actor';
@@ -114,6 +115,11 @@ export class ContextMenu {
       item('Change couple…', () => void openMain('couple'));
       item('Settings…', () => void openMain('settings'));
       sep();
+      sub(`🗣  They speak: ${SPEECH_LABEL[w.settings.speech ?? 'eg']}`, () => {
+        for (const lang of SPEECH_LANGS) {
+          item(SPEECH_LABEL[lang], () => void w.patchSettings({ speech: lang }), { checked: (w.settings.speech ?? 'eg') === lang });
+        }
+      });
       item('Lock positions', () => void w.patchSettings({ locked: !w.settings.locked }), { checked: w.settings.locked });
       item(w.settings.paused ? 'Resume' : 'Pause', () => void w.patchSettings({ paused: !w.settings.paused }));
       if (w.couple) {

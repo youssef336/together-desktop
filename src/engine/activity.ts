@@ -1,4 +1,5 @@
 import type { DialogueCategory } from '../domain/models';
+import { L } from '../domain/speech';
 import type { ActivityId } from '../domain/personality';
 import type { Actor } from './actor';
 import type { Throwable } from '../pixel/effects';
@@ -27,6 +28,14 @@ export interface Toss {
   floor: number;
 }
 
+/** The fighting-game layer of a fight (world/fight-hud.ts). */
+export type HudEvent =
+  | { kind: 'start' }
+  | { kind: 'round'; title: string; go: string }
+  | { kind: 'hit'; who: Actor; damage: number }
+  | { kind: 'ko'; text: string; sub?: string }
+  | { kind: 'love'; text: string; sub?: string };
+
 /** The whole screen's colour for a moment: red while they fight, grey while they sulk, warm when they make up. */
 export type ScreenTone = 'angry' | 'sulk' | 'love';
 
@@ -50,6 +59,12 @@ export interface Stage {
   screen?(tone: ScreenTone, seconds: number): void;
   /** Optional: a short screen shake (strength in sprite px). */
   shake?(power: number, seconds?: number): void;
+  /** Optional: a white impact flash over the screen. */
+  flash?(): void;
+  /** Optional: slow the world down (0.3 = a third of the speed) for a few real seconds. */
+  slowmo?(scale: number, seconds: number): void;
+  /** Optional: health bars, round banners, K.O. (fights). */
+  hud?(e: HudEvent): void;
 }
 
 export interface Ctx {
@@ -192,10 +207,11 @@ export const exchange = (category: DialogueCategory, opts: { activity?: Activity
 };
 const pending = new WeakMap<Ctx, { reply?: string; opener: Actor; listener: Actor }>();
 
-export const say = (who: 'initiator' | 'partner', text: string): Step => ({
+/** `text` may be a function so the line is picked in the language they speak at that moment. */
+export const say = (who: 'initiator' | 'partner', text: string | (() => string)): Step => ({
   name: 'say',
   update: (ctx) => {
-    ctx.stage.say(who === 'initiator' ? ctx.initiator : ctx.partner, text);
+    ctx.stage.say(who === 'initiator' ? ctx.initiator : ctx.partner, typeof text === 'function' ? text() : text);
     return true;
   },
 });
@@ -268,14 +284,14 @@ export const rockPaperScissors = (): Step => {
       } else if (phase === 'reveal' && t > 1.4) {
         const result = (a - b + 3) % 3; // 0 tie, 1 initiator wins, 2 partner wins
         if (result === 0) {
-          stage.say(p, 'Tie?! Again!');
+          stage.say(p, L('Tie?! Again!', 'تعادل؟! تاني!'));
           i.animator.play('surprise', { force: true });
           p.animator.play('surprise', { force: true });
         } else {
           const [win, lose] = result === 1 ? [i, p] : [p, i];
           win.animator.play('cheer', { force: true });
           lose.animator.play('surprise', { force: true });
-          stage.say(win, 'I win! 🎉');
+          stage.say(win, L('I win! 🎉', 'كسبت! 🎉'));
         }
         phase = 'result';
         t = 0;

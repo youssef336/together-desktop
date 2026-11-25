@@ -1,4 +1,5 @@
 import type { Box } from '../../pixel/draw';
+import { L } from '../../domain/speech';
 import { type BitmapId, bitmapCanvas } from '../../pixel/effects';
 import { Popups } from './popups';
 import type { Game, GameDef, GameHost } from './types';
@@ -37,7 +38,7 @@ class HeartPop implements Game {
       a.target = null;
       a.animator.play('idle', { force: true });
     }
-    world.say(player, 'Pop my hearts! 💗');
+    world.say(player, L('Pop my hearts! 💗', 'فرقع قلوبي! 💗'));
   }
 
   update(dt: number): void {
@@ -76,7 +77,7 @@ class HeartPop implements Game {
     if (f.kind === 'gray') {
       this.score = Math.max(0, this.score - 3);
       this.popups.add('-3', f.x, f.y, '#8c8aa0');
-      world.say(partner ?? player, 'Not that one! 😖');
+      world.say(partner ?? player, L('Not that one! 😖', 'مش دي! 😖'));
       return;
     }
     const pts = f.kind === 'gold' ? 5 : 1;
@@ -84,7 +85,7 @@ class HeartPop implements Game {
     this.popped++;
     this.popups.add(`+${pts}`, f.x, f.y, f.kind === 'gold' ? '#c9a227' : '#e8707f');
     world.effect('sparkle', f.x, f.y + 4 * s, 0.3);
-    if (this.popped % 15 === 0) world.say(player, 'You caught so many! 🥰');
+    if (this.popped % 15 === 0) world.say(player, L('You caught so many! 🥰', 'مسكت كتير أوي! 🥰'));
   }
 
   draw(ctx: CanvasRenderingContext2D): Box[] {

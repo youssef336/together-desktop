@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { autostart, isTauri, type MonitorInfo, world } from '../../platform/bridge';
 import { useApp } from '../../stores/app-store';
-import { Button, Card, Label, Slider, Title, Toggle } from '../../ui/controls';
+import { SPEECH_LABEL, SPEECH_LANGS } from '../../domain/speech';
+import { Button, Card, Chips, Label, Slider, Title, Toggle } from '../../ui/controls';
 import { MischiefCard } from './MischiefCard';
 
 export function SettingsPage() {
@@ -31,6 +32,11 @@ export function SettingsPage() {
           checked={s.mouseReactions}
           onChange={(v) => void save({ mouseReactions: v })}
         />
+        <div className="mt-3">
+          <Label>They speak</Label>
+          <Chips options={SPEECH_LANGS} value={s.speech ?? 'eg'} labels={SPEECH_LABEL} onChange={(speech) => void save({ speech })} />
+          <p className="mt-1 text-xs text-ink-soft">Every line in their bubbles: chats, questions, games, fights. Your own lines stay as you wrote them.</p>
+        </div>
         <div className="mt-3 grid gap-5 md:grid-cols-2">
           <Slider label="Character size" min={2} max={6} value={s.scale} onChange={(scale) => void save({ scale })} hint="Pixel scale — stays crisp at every size." />
           <Slider label="Speech bubble seconds" min={2} max={10} value={s.bubbleSeconds} onChange={(bubbleSeconds) => void save({ bubbleSeconds })} />

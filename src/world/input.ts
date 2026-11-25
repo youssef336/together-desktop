@@ -1,4 +1,5 @@
 import { pickExchange } from '../domain/dialogue';
+import { L, type Lines, pick } from '../domain/speech';
 import { newId } from '../domain/models';
 import { clickReactionWeights, weightedPick } from '../domain/personality';
 import type { Actor } from '../engine/actor';
@@ -12,8 +13,8 @@ import type { Corner } from './scene-layer';
 
 const DRAG_START_PX = 5;
 const DOUBLE_CLICK_MS = 320;
-const PICKUP_LINES = ['Whoa!', 'Eek!', 'Wheee!', 'Where are we going?', 'Hey! 😳'];
-const PARTNER_LINES = ['Are you okay?', 'Careful!', 'Hey, bring them back!', 'Hehe, flying?'];
+const PICKUP_LINES: Lines = { en: ['Whoa!', 'Eek!', 'Wheee!', 'Where are we going?', 'Hey! 😳'], eg: ['واه!', 'إيييي!', 'وييييي!', 'رايحين فين؟', 'إيه ده! 😳'] };
+const PARTNER_LINES: Lines = { en: ['Are you okay?', 'Careful!', 'Hey, bring them back!', 'Hehe, flying?'], eg: ['إنت كويس؟', 'حاسب!', 'رجّعه هنا!', 'هيهي، بتطير؟'] };
 
 /** Pointer handling: click reactions, double-click quick menu, right-click menu, drag and drop, hover. */
 export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu, games: GameController, talk: Interactions): void {
@@ -127,7 +128,7 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
       actor.mode = 'dragged';
       actor.target = null;
       actor.animator.play('dangle', { force: true, then: 'dangle' });
-      if (w.rnd() < 0.6) w.say(actor, PICKUP_LINES[Math.floor(w.rnd() * PICKUP_LINES.length)]!);
+      if (w.rnd() < 0.6) w.say(actor, pick(PICKUP_LINES, w.rnd));
       void native.setCapture(true);
     }
     actor.x = e.clientX + down.offX;
@@ -164,7 +165,7 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
       if (partner && partner.mode === 'free' && w.rnd() < 0.3 + partner.character.personality.affection / 200) {
         partner.faceTowards(actor);
         partner.animator.play('surprise', { force: true });
-        w.say(partner, PARTNER_LINES[Math.floor(w.rnd() * PARTNER_LINES.length)]!);
+        w.say(partner, pick(PARTNER_LINES, w.rnd));
       }
       void store.logEvent({ id: newId(), type: 'drag', timestamp: Date.now(), characterIds: [actor.id] });
       // Tossed around a lot in a short time → a little dizzy and grumpy.
@@ -175,7 +176,7 @@ export function wireInput(canvas: HTMLCanvasElement, w: World, menu: ContextMenu
         w.mood(actor, 'dragged-a-lot');
         window.setTimeout(() => {
           actor.animator.play('pout', { force: true });
-          w.say(actor, "I'm dizzy... stop it 😵‍💫");
+          w.say(actor, L("I'm dizzy... stop it 😵‍💫", 'دُخت... بطّل 😵‍💫'));
         }, 700);
       }
       w.kick();
@@ -272,7 +273,7 @@ function react(w: World, actor: Actor): void {
       break;
     case 'blush':
       actor.animator.play('blush', { force: true });
-      w.say(actor, '...hi 😳');
+      w.say(actor, L('...hi 😳', '...هاي 😳'));
       break;
   }
   actor.nextThinkAt = w.time + 4;

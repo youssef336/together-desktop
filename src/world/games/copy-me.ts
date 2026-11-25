@@ -1,4 +1,5 @@
 import type { ClipId } from '../../engine/clips';
+import { L } from '../../domain/speech';
 import type { Game, GameDef, GameHost } from './types';
 
 const MOVES: { id: string; label: string; clip: ClipId; bubble: string }[] = [
@@ -38,7 +39,7 @@ class CopyMe implements Game {
   private async run(): Promise<void> {
     const { player, partner, world, choice } = this.h;
     const seq: number[] = [];
-    world.say(player, 'Watch me, then copy! 👀');
+    world.say(player, L('Watch me, then copy! 👀', 'بص عليا، وبعدين اعمل زيي! 👀'));
     await this.wait(2.2);
     while (!this.stopped) {
       seq.push(Math.floor(world.rnd() * MOVES.length));
@@ -53,12 +54,12 @@ class CopyMe implements Game {
       }
       for (let k = 0; k < seq.length; k++) {
         if (this.stopped) return;
-        const pick = await choice.ask(player, `Your turn! (${k + 1}/${seq.length})`, MOVES.map((m) => ({ label: m.label, value: m.id })), 12);
+        const pick = await choice.ask(player, L(`Your turn! (${k + 1}/${seq.length})`, `دورك! (${k + 1}/${seq.length})`), MOVES.map((m) => ({ label: m.label, value: m.id })), 12);
         if (this.stopped) return;
         const want = MOVES[seq[k]!]!;
         if (pick !== want.id) {
           player.animator.play('pout', { force: true });
-          world.say(player, pick === null ? 'Too slow! 😴' : `Nope! It was ${want.bubble}`);
+          world.say(player, pick === null ? L('Too slow! 😴', 'بطيء أوي! 😴') : L(`Nope! It was ${want.bubble}`, `لأ! كانت ${want.bubble}`));
           await this.wait(1.6);
           this.over = true;
           return;
@@ -70,8 +71,8 @@ class CopyMe implements Game {
       player.animator.play('happy', { force: true });
       if (partner) {
         partner.animator.play('cheer', { force: true });
-        world.say(partner, this.score >= 5 ? 'Genius!! 🤯' : 'Yay!');
-      } else world.say(player, 'Yes!!');
+        world.say(partner, this.score >= 5 ? L('Genius!! 🤯', 'عبقري!! 🤯') : L('Yay!', 'ييي!'));
+      } else world.say(player, L('Yes!!', 'آه!!'));
       await this.wait(1.4);
     }
   }

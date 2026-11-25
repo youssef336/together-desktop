@@ -17,6 +17,7 @@ import {
   TAUNT,
   THROW_CALL,
 } from '../domain/fight';
+import { L } from '../domain/speech';
 import { THROWABLES, type Throwable } from '../pixel/effects';
 import type { Ctx, Step } from './activity';
 import { angry, apart, type Beat, clampX, dirTo, faceOf, handOf, headTop, hit, nameOf, scene } from './fight-script';
@@ -41,6 +42,7 @@ const spark = (): Step =>
           st.effect('anger', headTop(a, st).x + st.px(6), headTop(a, st).y, 2.4);
           st.say(a, pickLine(SPARK, st.rnd, nameOf(b)));
           st.screen?.('angry', 120);
+          st.hud?.({ kind: 'start' });
         },
       },
       { wait: 0.5, do: () => (b.faceTowards(a), b.animator.play('surprise', { force: true, then: 'angry' })) },
@@ -74,11 +76,20 @@ const throwRound = (first: 'initiator' | 'partner'): Step =>
       const [by, at] = n % 2 === 0 ? [p, q] : [q, p];
       let item = THROWABLES[Math.floor(st.rnd() * THROWABLES.length)]!;
       if (used.includes(item)) item = THROWABLES[(THROWABLES.indexOf(item) + 1 + n) % THROWABLES.length]!;
+      // Malouka's signature move: her first throw is always the flying slipper.
+      const signature = by.character.signature === 'malouka' && !used.includes('slipper') && n < 2;
+      if (signature) item = 'slipper';
       used.push(item);
       const dodge = st.rnd() < 0.3;
       let flight = 0.7;
       beats.push(
-        { wait: n === 0 ? 0.5 : 0.35, do: () => by.animator.play('windup', { force: true, then: 'windup' }) },
+        {
+          wait: n === 0 ? 0.5 : 0.35,
+          do: () => {
+            by.animator.play('windup', { force: true, then: 'windup' });
+            if (signature) st.say(by, L('FLYING SLIPPER! 🩴', 'الشبشب الطاير! 🩴'));
+          },
+        },
         {
           wait: 0.45,
           do: () => {
@@ -164,7 +175,7 @@ const brawlRound = (): Step =>
           mid = apart(st, mid, st.px(10)).reduce((s, x) => s + x, 0) / 2;
           a.walkTo(mid - dirTo(a, b) * st.px(5), a.y, { run: true, then: 'angry' });
           b.walkTo(mid + dirTo(a, b) * st.px(5), b.y, { run: true, then: 'angry' });
-          st.say(a, 'آآآآه!');
+          st.say(a, L('RAAAH!', 'آآآآه!'));
         },
         until: () => a.arrived && b.arrived,
         max: 6,
@@ -263,7 +274,7 @@ const pillowRound = (): Step =>
           const [l, r] = apart(st, (a.x + b.x) / 2, st.px(15));
           a.walkTo(a.x <= b.x ? l : r, a.y, { run: true, then: 'windup' });
           b.walkTo(a.x <= b.x ? r : l, b.y, { run: true, then: 'windup' });
-          st.say(b, 'حرب مخدات!!');
+          st.say(b, L('PILLOW FIGHT!!', 'حرب مخدات!!'));
         },
         until: () => a.arrived && b.arrived,
         max: 6,
@@ -316,6 +327,8 @@ const sulk = (): Step =>
           b.walkTo(a.x <= b.x ? r : l, b.y, { then: 'sulk' });
           st.mood?.(a, 'fought');
           st.mood?.(b, 'fought');
+          st.hud?.({ kind: 'ko', text: 'K.O.!', sub: L('Nobody wins…', 'محدش كسب…') });
+          st.flash?.();
         },
         until: () => a.arrived && b.arrived,
         max: 7,
@@ -328,10 +341,10 @@ const sulk = (): Step =>
           st.screen?.('sulk', 120);
           st.effect('heartbreak', (a.x + b.x) / 2, Math.min(a.y, b.y) - st.px(40), 1);
           storms();
-          st.say(a, 'هممف!');
+          st.say(a, L('Hmph!', 'هممف!'));
         },
       },
-      { wait: 1.3, do: () => st.say(b, 'هممف!!') },
+      { wait: 1.3, do: () => st.say(b, L('Hmph!!', 'هممف!!')) },
       { wait: 2.6, do: () => st.say(st.rnd() < 0.5 ? a : b, pickLine(SULK, st.rnd)) },
       // Both peek at the same time, get caught, and snap back.
       { wait: 2.2, do: () => (a.faceTowards(b), b.faceTowards(a), a.stop('surprise'), b.stop('surprise')) },
@@ -421,6 +434,8 @@ const makeUp = (): Step =>
           st.effect('hearts', (sorry.x + proud.x) / 2, top + st.px(6), 3);
           st.mood?.(sorry, 'made-up');
           st.mood?.(proud, 'made-up');
+          const [l, r] = sorry.x <= proud.x ? [sorry, proud] : [proud, sorry];
+          st.hud?.({ kind: 'love', text: `${nameOf(l)} ♥ ${nameOf(r)}`, sub: L('Made up ❤️', 'صافي يا لبن ❤️') });
         },
       },
       { wait: 3.4, do: () => st.say(st.rnd() < 0.5 ? sorry : proud, pickLine(MADE_UP, st.rnd)) },
@@ -438,12 +453,33 @@ const makeUp = (): Step =>
     return beats;
   });
 
+/** "ROUND 2 … FIGHT!" — they square up while the banner is on. */
+const announce = (n: number, last: boolean): Step =>
+  scene('fight:announce', (ctx) => {
+    const { initiator: a, partner: b, stage: st } = ctx;
+    return [
+      {
+        do: () => {
+          a.faceTowards(b);
+          b.faceTowards(a);
+          angry(a, b);
+          st.hud?.({
+            kind: 'round',
+            title: last ? L('FINAL ROUND', 'الجولة الأخيرة') : L(`ROUND ${n}`, `الجولة ${'١٢٣٤'[n - 1] ?? n}`),
+            go: L('FIGHT!', 'يلا!'),
+          });
+        },
+      },
+      { wait: 1.9 },
+    ];
+  });
+
 /** The whole fight, from the spark to the hug. */
 export function buildFight(ctx: Ctx): Step[] {
   const rounds = pickRounds(ctx.stage.rnd);
   return [
     spark(),
-    ...rounds.map((k, i) => ROUND[k](i % 2 === 0 ? 'initiator' : 'partner')),
+    ...rounds.flatMap((k, i) => [announce(i + 1, i === rounds.length - 1), ROUND[k](i % 2 === 0 ? 'initiator' : 'partner')]),
     sulk(),
     makeUp(),
   ];

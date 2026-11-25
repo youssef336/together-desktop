@@ -1,9 +1,11 @@
 import { fillTokens, pickExchange } from '../domain/dialogue';
+import { L, pick, setSpeechLang } from '../domain/speech';
 import type { Character, Couple, DialogueCategory, WorldSettings } from '../domain/models';
 import { newId } from '../domain/models';
 import type { ActivityId } from '../domain/personality';
 import { ACTIVITIES, MOMENTS } from '../engine/activities';
-import { type ActivityDef, ActivityRunner, type EffectKind, type ScreenTone, type Stage, type Toss } from '../engine/activity';
+import { type ActivityDef, ActivityRunner, type EffectKind, type HudEvent, type ScreenTone, type Stage, type Toss } from '../engine/activity';
+import { FightHud } from './fight-hud';
 import { Actor } from '../engine/actor';
 import { CoupleScheduler } from '../engine/scheduler';
 import { store } from '../data/store';
@@ -33,6 +35,10 @@ export class World implements Stage {
   /** Things thrown in a fight, and the screen's colour / shake (engine/fight.ts). */
   readonly projectiles = new Projectiles();
   readonly screenFx = new ScreenFx();
+  readonly fightHud = new FightHud();
+  /** Slow motion: world speed and how many real seconds it lasts. */
+  private timeScale = 1;
+  private slowLeft = 0;
   readonly scene = new SceneLayer();
   /** Opt-in pranks: grabbing the mouse, closing a tab (see world/mischief.ts). */
   readonly mischief: Mischief = new Mischief(this);
@@ -109,12 +115,25 @@ export class World implements Stage {
   shake(power: number, seconds = 0.25): void {
     if (!this.settings.lowPerformance) this.screenFx.shake(power, seconds);
   }
+  flash(): void {
+    if (!this.settings.lowPerformance) this.screenFx.flash();
+  }
+  slowmo(scale: number, seconds: number): void {
+    this.timeScale = scale;
+    this.slowLeft = seconds;
+  }
+  hud(e: HudEvent): void {
+    this.fightHud.on(e, this.actors);
+  }
 
   /** A fight that was cut short (drag, game, another activity) must not leave the screen red or grey. */
   private settleFightFx(): void {
     const tone = this.screenFx.current;
     const fighting = this.runner?.def.id === 'fight';
     if ((!fighting || this.paused) && (tone === 'angry' || tone === 'sulk')) this.screenFx.clear();
+    // A cut-short fight takes its health bars with it (the "made up" banner may finish on its own).
+    if (!fighting && this.fightHud.active && tone !== 'love') this.fightHud.clear();
+    if (!fighting) this.timeScale = 1;
     if (this.game && this.projectiles.active) this.projectiles.clear();
   }
 
@@ -141,6 +160,7 @@ export class World implements Stage {
   async load(): Promise<void> {
     const [settings, couples, characters] = await Promise.all([store.getSettings(), store.listCouples(), store.listCharacters()]);
     this.settings = settings;
+    setSpeechLang(settings.speech);
     const sceneChanged = this.scene.configure(settings, this.renderer.view);
     this.couple = couples.find((c) => c.id === settings.activeCoupleId) ?? couples[0] ?? null;
     const byId = new Map(characters.map((c) => [c.id, c]));
@@ -202,6 +222,7 @@ export class World implements Stage {
       .then(async () => {
         const fresh = await store.getSettings();
         this.settings = { ...fresh, ...patch };
+        setSpeechLang(this.settings.speech);
         await store.saveSettings(this.settings);
         await send(EVENTS.dataChanged, { from: 'world' });
         this.publishStatus();
@@ -336,6 +357,7 @@ export class World implements Stage {
       this.particles.active ||
       this.projectiles.active ||
       this.screenFx.active ||
+      this.fightHud.active ||
       this.mischief.active ||
       (this.runner !== null && this.runner.stepName.startsWith('walk'))
     );
@@ -351,7 +373,13 @@ export class World implements Stage {
     return Math.max(low ? 1 / 6 : 1 / 12, next);
   }
 
-  private update(dt: number): void {
+  private update(real: number): void {
+    // Slow motion stretches world time; it always ends after its real seconds.
+    if (this.slowLeft > 0) {
+      this.slowLeft -= real;
+      if (this.slowLeft <= 0) this.timeScale = 1;
+    }
+    const dt = real * this.timeScale;
     this.time += dt;
     const s = this.scale;
     for (const a of this.actors) {
@@ -401,7 +429,11 @@ export class World implements Stage {
       this.renderer.dirty = true;
     }
     if (this.screenFx.active) {
-      this.screenFx.update(dt, s, this.rnd);
+      this.screenFx.update(real, s, this.rnd);
+      this.renderer.dirty = true;
+    }
+    if (this.fightHud.active) {
+      this.fightHud.update(real);
       this.renderer.dirty = true;
     }
     this.renderer.setOffset(this.screenFx.offset);
@@ -465,7 +497,7 @@ export class World implements Stage {
       this.scene.configure({ ...this.settings, sceneLight: this.scene.light }, this.renderer.view);
       void this.patchSettings({ sceneLight: this.scene.light });
       const a = free[0];
-      if (a) this.say(a, this.scene.light ? 'Ah, light! 💡' : 'Cozy... 🌙');
+      if (a) this.say(a, this.scene.light ? L('Ah, light! 💡', 'آه، نور! 💡') : L('Cozy... 🌙', 'دافي كده... 🌙'));
     } else if (it.kind === 'gift') {
       this.startActivity('gift');
     } else if (it.kind === 'water') {
@@ -477,7 +509,7 @@ export class World implements Stage {
       const ms = (Math.abs(tx - a.x) / (a.speed * (this.scale / 3))) * 1000 + 300;
       window.setTimeout(() => {
         a.faceTowards({ x: at.x } as Actor);
-        this.say(a, ['Grow, little one 🌱', 'Drink up! 💧', 'You look thirsty.'][Math.floor(this.rnd() * 3)]!);
+        this.say(a, pick({ en: ['Grow, little one 🌱', 'Drink up! 💧', 'You look thirsty.'], eg: ['كبري يا صغنونة 🌱', 'اشربي! 💧', 'شكلك عطشانة.'] }, this.rnd));
         this.effect('sparkle', at.x, at.y - this.px(16), 1);
         this.kick();
       }, ms);

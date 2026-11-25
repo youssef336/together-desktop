@@ -3,6 +3,7 @@
 // catch them), or climbs up and closes your browser tab. Off for everyone by default.
 
 import type { WorldSettings } from './models';
+import { speechLang } from './speech';
 
 export type MischiefPace = 'rare' | 'sometimes' | 'often';
 
@@ -69,7 +70,24 @@ export const MISCHIEF_LINES = {
   tabDenied: ['I can’t reach your tabs 🥺 (allow me in System Settings)'],
 } as const;
 
+export const MISCHIEF_LINES_EG: Record<keyof typeof MISCHIEF_LINES, readonly string[]> = {
+  sneak: ['هيهي… 😈', 'أوه، ماوس 👀', 'متتحركش…', '*على طراطيف صوابعي* 🤫'],
+  grab: ['مسكته! 😈', 'بقى بتاعي! 🖱️', 'هيهيهي 😝', 'امسكني لو تقدر!'],
+  tug: ['لأ! 😝', 'بتاعي!!', 'مش هرجعه 😜', 'بطيء أوي!', 'هيهي، لأ~'],
+  taunt: ['بتدور على ده؟ 🖱️', 'وييي! 🏃', 'تعالى خده!', 'لالالا~ 🎶'],
+  caught: ['خلاص خده 😒', 'ماشي ماشي، كسبت 🙈', 'هممف. اتفضل 😤'],
+  bored: ['زهقت، خده 🙄', 'اتفضل، خلصت 😌'],
+  escaped: ['إنت سريع أوي! 😤', 'هممف، المرة الجاية…'],
+  tabWarn: ['باي باي يا تاب! 👋😈', 'التاب ده؟ راح. 😈', 'بص بقى… 😏'],
+  tabCancel: ['ماشي ماشي… 😇', 'خلاص، هسيبه 🙄'],
+  tabClosed: ['أوبس 😜', 'هيهي، راح! 😈', 'رجعتلي بقى 💕'],
+  tabNone: ['مفيش تاب أسرقه… 🙄', 'هممم، مفيش حاجة أقفلها 🤔'],
+  partnerScold: ['رجّعه! 😠', 'ده مش بتاعك! 😤', 'بطّل يا {thief}! 😅'],
+  partnerProud: ['هيهي، ده حبيبي 😏', 'اجري يا {thief}، اجري! 🏃'],
+  tabDenied: ['مش طايل التابات 🥺 (اسمحلي من System Settings)'],
+};
+
 export function line(kind: keyof typeof MISCHIEF_LINES, rnd: () => number = Math.random): string {
-  const list = MISCHIEF_LINES[kind];
+  const list = speechLang() === 'eg' ? MISCHIEF_LINES_EG[kind] : MISCHIEF_LINES[kind];
   return list[Math.floor(rnd() * list.length)]!;
 }
