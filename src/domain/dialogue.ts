@@ -1,5 +1,6 @@
 import type { DialogueCategory, DialogueLine } from './models';
 import type { DialogueTone } from './personality';
+import { speechLang } from './speech';
 
 // Built-in lines. `{you}` = the listener's nickname, `{me}` = the speaker's.
 // Users add their own lines per couple; built-in categories can be switched off.
@@ -78,6 +79,71 @@ export const ACTIVITY_LINES: Record<string, BuiltIn[]> = {
   talk: [B('Tell me about your day.', 'It got better just now.'), B('Can I tell you something?', 'Always.')],
 };
 
+type Eg = [first: string, reply?: string];
+
+/**
+ * The same lines in Egyptian Arabic, index for index (tones come from the English entry).
+ * A test keeps both tables the same length.
+ */
+export const BUILT_IN_EG: Record<DialogueCategory, Eg[]> = {
+  casual: [
+    ['تعالى هنا.', 'حصل إيه؟ ❤️'],
+    ['إنت مشغول؟', 'مبقتش خلاص.'],
+    ['بتفكر في إيه؟', 'فيك طبعًا.'],
+    ['الديسكتوب ده بقى مكركب.', 'إحنا ساكنين هنا، من حقنا نتكلم.'],
+    ['بص، بيشتغل جامد.', 'طب نسكت شوية… شوية بس.'],
+    ['حلمت حلم غريب أوي.', 'كنت أنا فيه؟'],
+    ['تيجي نعمل حاجة؟', 'أي حاجة معاك، آه.'],
+  ],
+  romantic: [
+    ['بحب أبقى هنا معاك.', 'وأنا كمان. أوي.'],
+    ['{you}...', 'نعم؟ ❤️'],
+    ['شكلك كيوت النهارده.', 'النهارده بس؟ 😤'],
+    ['خليك جنبي، ماشي؟', 'أنا مش رايح في حتة.'],
+    ['شكرًا إنك إنت.', 'بس بقى، هعيط 🥺'],
+  ],
+  funny: [
+    ['أقدر أغلبك في أي حاجة.', 'حجرة ورقة مقص. دلوقتي.'],
+    ['هو الماوس ده ماشي ورانا؟', 'اعمل نفسك طبيعي.'],
+    ['أنا ساكن ديسكتوب محترف ١٠٠٪.', 'إنت وقعت من التاسك بار مرتين.'],
+    ['تعالى نعمل نفسنا أيقونات.', '...أنا سلة المهملات.'],
+  ],
+  teasing: [
+    ['مشيتك تضحك.', 'إنت بتموت في مشيتي.'],
+    ['مش هتعرف تمسكني!', 'هتشوف.'],
+    ['إنت لسه متكعبل؟', 'دي حركة رقص.'],
+  ],
+  supportive: [
+    ['إنت عامل حلو أوي النهارده.', 'إحنا الاتنين.'],
+    ['ناخد بريك صغير؟', 'لو إنت كمان هتاخد.'],
+    ['مهما حصل، أنا هنا.', '❤️'],
+  ],
+  activity: [],
+  thought: [
+    ['هممم... حاجة ناكلها؟'],
+    ['يا ترى إيه اللي ورا الشباك ده؟'],
+    ['أروح أسلم على {you}؟'],
+    ['أيقونات كتير أوي...'],
+    ['النهارده دافي ولطيف.'],
+  ],
+  reaction: [['هيهي!'], ['هاي هاي!'], ['بووب؟'], ['أوه! لقيتني.'], ['❤️'], ['أهلًا!']],
+  greeting: [['هاي يا {you}!', 'هاييي ❤️'], ['أهو إنت!', 'وحشتك؟']],
+  morning: [['صباح الخير يا {you} ☀️', 'خمس دقايق كمان...'], ['القهوة الأول؟', 'القهوة الأول.']],
+  night: [['الوقت اتأخر... نعسان؟', 'شوية. خليك معايا؟'], ['تصبح على خير يا {you} 🌙', 'أحلام سعيدة ❤️']],
+  special: [['كل سنة وإحنا مع بعض ❤️', 'أحلى أيامي معاك.']],
+};
+
+export const ACTIVITY_LINES_EG: Record<string, Eg[]> = {
+  coffee: [['يلا نشرب قهوة.', 'ماشي، بس إنت اللي هتدفع.'], ['معلقة سكر ولا اتنين؟', 'إنت بس.'], ['مممم... تحفة.', 'أحلى قهوة مع أحلى صحبة.']],
+  hug: [['تعالى ❤️'], ['وقت الحضن!'], ['كنت محتاج ده.']],
+  dance: [['ارقص معايا!', 'لو إنت اللي هتقود.'], ['لف!', 'ويييي!']],
+  walk: [['يلا نتمشى.', 'تمسك إيدي؟'], ['المنظر حلو من هنا.', 'إنت المنظر.']],
+  sit: [['تعالى اقعد جنبي.', 'جاي ❤️'], ['ده حلو.', 'اممم.']],
+  sleep: [['أنا نعسان أوي...', 'ننام سوا؟'], ['خخخ...']],
+  play: [['حجرة ورقة مقص!', 'هتخسر!'], ['تاني!', 'أحسن اتنين من تلاتة!']],
+  talk: [['احكيلي يومك كان عامل إزاي.', 'بقى أحلى دلوقتي.'], ['أقولك حاجة؟', 'دايمًا.']],
+};
+
 export interface PickedLine {
   first: string;
   reply?: string;
@@ -101,10 +167,12 @@ export function pickExchange(
   const rnd = opts.rnd ?? Math.random;
   const pool: PickedLine[] = [];
   const builtIn = opts.activity ? (ACTIVITY_LINES[opts.activity] ?? []) : BUILT_IN[category];
+  const eg = speechLang() === 'eg' ? (opts.activity ? ACTIVITY_LINES_EG[opts.activity] : BUILT_IN_EG[category]) : undefined;
   if (!opts.disabled.includes(category)) {
     builtIn.forEach((b, i) => {
       const fits = !b.tones || b.tones.includes(opts.tone);
-      const entry = { first: b.first, reply: b.reply, key: `${opts.activity ?? category}:${i}` };
+      const [first, reply] = eg?.[i] ?? [b.first, b.reply];
+      const entry = { first, reply, key: `${opts.activity ?? category}:${i}` };
       pool.push(entry);
       if (fits && b.tones) pool.push(entry); // tone-matched lines are twice as likely
     });

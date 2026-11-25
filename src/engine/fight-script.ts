@@ -97,6 +97,12 @@ export function hit(st: Stage, slides: Slides, from: Actor, to: Actor, power: nu
   to.animator.play('hurt', { force: true, then: 'angry' });
   slides.push(to, clampX(st, to.x + dirTo(from, to) * st.px(4 + power * 3)), 0.25);
   st.shake?.(power, 0.25);
+  st.hud?.({ kind: 'hit', who: to, damage: 5 + power * 5 + Math.floor(st.rnd() * 4) });
+  // Some big hits land in slow motion, with a white flash.
+  if (power >= 2 && st.rnd() < 0.4) {
+    st.flash?.();
+    st.slowmo?.(0.3, 0.7);
+  }
   if (opts.line) st.say(to, pickLine(OUCH, st.rnd));
 }
 

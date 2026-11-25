@@ -130,6 +130,9 @@ export class Renderer {
         drawn.push(pad(box, 2));
       }
     }
+    if (!world.settings?.hidden && world.fightHud.active) {
+      for (const b of world.fightHud.draw(ctx, this.view, s, world.time)) drawn.push(pad(b, 4));
+    }
     this.prev = drawn;
     this.reportHits(hits);
   }

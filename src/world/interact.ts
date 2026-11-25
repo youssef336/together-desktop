@@ -1,4 +1,5 @@
 import { newId } from '../domain/models';
+import { L, type Lines, pick } from '../domain/speech';
 import { isNameLocked } from '../domain/templates';
 import { pickQuestion, type Question } from '../domain/questions';
 import type { Actor } from '../engine/actor';
@@ -8,7 +9,7 @@ import type { ChoiceBubble } from './choice';
 import type { GameController } from './games/controller';
 import type { World } from './runtime';
 
-const IGNORED = ['...okay, never mind. 😔', 'Hello? 👀', "I'll ask later..."];
+const IGNORED: Lines = { en: ['...okay, never mind. 😔', 'Hello? 👀', "I'll ask later..."], eg: ['...خلاص، ولا يهمك. 😔', 'ألو؟ 👀', 'هسأل بعدين...'] };
 const SOLO_CLIP = { coffee: 'cheer', hug: 'blush', dance: 'dance', sleep: 'sit', walk: 'happy', talk: 'talk' } as const;
 
 /**
@@ -50,7 +51,7 @@ export class Interactions {
     if (actor.mode === 'activity') actor.mode = 'free';
     actor.nextThinkAt = w.time + 5;
     if (answer === null) {
-      w.say(actor, IGNORED[Math.floor(w.rnd() * IGNORED.length)]!);
+      w.say(actor, pick(IGNORED, w.rnd));
       actor.animator.play('think', { force: true });
       w.mood(actor, 'ignored');
       w.kick();
@@ -77,7 +78,7 @@ export class Interactions {
           if (partner) w.startActivity(f.id, actor.id);
           else actor.animator.play(SOLO_CLIP[f.id], { force: true });
         } else if (f.kind === 'partner-hug' && partner && partner.mode === 'free') {
-          w.say(partner, 'Hey! Be nice 😠');
+          w.say(partner, L('Hey! Be nice 😠', 'إيه ده! اتلم 😠'));
           window.setTimeout(() => w.startActivity('comfort', partner.id, 'auto'), 1400);
         }
       }, 1600);
@@ -89,14 +90,14 @@ export class Interactions {
   async rename(actor: Actor): Promise<void> {
     const c = actor.character;
     if (isNameLocked(c)) return; // Bello and Malouka keep their names
-    const name = await this.choice.askText(actor, 'What should I be called?', c.name);
+    const name = await this.choice.askText(actor, L('What should I be called?', 'تحب تسميني إيه؟'), c.name);
     if (!name || name === c.name) return;
     const updated = { ...c, name, updatedAt: Date.now() };
     actor.character = updated;
     await store.saveCharacter(updated);
     await send(EVENTS.dataChanged, { from: 'world' });
     actor.animator.play('happy', { force: true });
-    this.w.say(actor, `${name}! I love it ❤️`);
+    this.w.say(actor, L(`${name}! I love it ❤️`, `${name}! حلو أوي ❤️`));
     this.w.kick();
   }
 }

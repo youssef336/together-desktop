@@ -1,4 +1,5 @@
 import type { Box } from '../../pixel/draw';
+import { L, type Lines, pick } from '../../domain/speech';
 import { type BitmapId, bitmapCanvas } from '../../pixel/effects';
 import { type DropKind, FallingField, GAME_SECONDS, scoreFor } from './falling';
 import { Popups } from './popups';
@@ -6,8 +7,8 @@ import type { Game, GameDef, GameHost } from './types';
 
 const BITMAP: Record<DropKind, BitmapId> = { cup: 'cup', gold: 'goldCup', heart: 'heart', mug: 'brokenMug' };
 const MAX_LIVES = 3;
-const CHEERS = ['Go go go!', 'Wow!!', 'So fast!', 'Coffee master ☕', "That's my person!"];
-const OUCH = ['Ouch!', 'Not the broken one!', 'Careful!!'];
+const CHEERS: Lines = { en: ['Go go go!', 'Wow!!', 'So fast!', 'Coffee master ☕', "That's my person!"], eg: ['يلا يلا يلا!', 'واو!!', 'سريع أوي!', 'معلم القهوة ☕', 'ده حبيبي!'] };
+const OUCH: Lines = { en: ['Ouch!', 'Not the broken one!', 'Careful!!'], eg: ['آي!', 'مش المكسورة!', 'حاسب!!'] };
 
 /** Coffee falls from the top; move your character with the mouse or ←/→ and catch it. */
 class CoffeeCatch implements Game {
@@ -41,9 +42,9 @@ class CoffeeCatch implements Game {
       partner.y = this.groundY;
       partner.x = Math.max(world.bounds.left, Math.min(world.bounds.right, partner.x));
       partner.animator.play('idle', { force: true });
-      world.say(partner, 'You can do it!');
+      world.say(partner, L('You can do it!', 'تقدر تعملها!'));
     }
-    world.say(player, 'Catch the coffee! ☕');
+    world.say(player, L('Catch the coffee! ☕', 'امسك القهوة! ☕'));
   }
 
   pointerMove(x: number): void {
@@ -79,7 +80,7 @@ class CoffeeCatch implements Game {
         player.animator.play('surprise', { force: true, then: 'catch' });
         world.effect('sweat', player.x + 8 * s, player.y - 34 * s, 1);
         this.popups.add('💔', e.x, e.y - 10 * s, '#e8707f');
-        if (partner) world.say(partner, OUCH[Math.floor(world.rnd() * OUCH.length)]!);
+        if (partner) world.say(partner, pick(OUCH, world.rnd));
       } else {
         this.combo++;
         this.best = Math.max(this.best, this.combo);
@@ -88,7 +89,7 @@ class CoffeeCatch implements Game {
         if (e.kind === 'gold') world.effect('sparkle', e.x, e.y, 0.6);
         if (partner && this.combo > 0 && this.combo % 8 === 0) {
           partner.animator.play('cheer', { force: true });
-          world.say(partner, CHEERS[Math.floor(world.rnd() * CHEERS.length)]!);
+          world.say(partner, pick(CHEERS, world.rnd));
         }
       }
       this.lives = r.lives;

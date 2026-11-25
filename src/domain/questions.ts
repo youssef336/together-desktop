@@ -1,5 +1,6 @@
 import type { CustomQuestion } from './models';
 import type { MoodCause } from './mood';
+import { L, speechLang } from './speech';
 
 // Questions a character asks when you click them. Each answer has a reaction:
 // what they say, how they move, how it touches their mood, and sometimes a follow-up
@@ -28,8 +29,8 @@ const yesNo = (id: string, text: string, yes: Reaction, no: Reaction): Question 
   id,
   text,
   options: [
-    { label: 'Yes', reaction: yes },
-    { label: 'No', reaction: no },
+    { label: id.startsWith('custom:') ? L('Yes', 'آه') : 'Yes', reaction: yes },
+    { label: id.startsWith('custom:') ? L('No', 'لأ') : 'No', reaction: no },
   ],
 });
 
@@ -76,6 +77,34 @@ export const QUESTIONS: Question[] = [
   },
 ];
 
+/** The built-in questions in Egyptian Arabic: the question, then each answer's label and reply, in order. */
+const QUESTIONS_EG: Record<string, { text: string; options: [label: string, say: string][] }> = {
+  love: { text: 'بتحبني؟ 🥺', options: [['آه', 'كنت عارف!! ❤️'], ['لأ', '...أه. 💔']] },
+  coffee: { text: 'بريك قهوة؟ ☕', options: [['آه', 'ييي، ديت قهوة!'], ['لأ', 'طيب... بعدين.']] },
+  play: { text: 'تلعب معايا؟ 🎮', options: [['آه', 'يلا بينا!'], ['لأ', 'مملل. 😤']] },
+  busy: { text: 'إنت مشغول؟', options: [['آه', 'هسكت. شد حيلك! 💪'], ['لأ', 'خلاص اقعد معانا شوية!']] },
+  cute: { text: 'أنا كيوت النهارده؟', options: [['آه', 'هيهي، عارف 😳'], ['لأ', 'قليل الذوق!! 😤']] },
+  nap: { text: 'ننام شوية؟', options: [['آه', 'أحلى فكرة... 😴'], ['لأ', 'ماشي، أنا صاحي. تقريبًا.']] },
+  water: { text: 'شربت مية النهارده؟', options: [['آه', 'فخور بيك! 💧'], ['لأ', 'قوم اشرب. حالًا. 😠']] },
+  miss: { text: 'وحشتك؟', options: [['آه', 'إنت وحشتني أكتر ❤️'], ['لأ', 'هممف. وإنت كمان موحشتنيش. (وحشتني.)']] },
+  rps: { text: 'حجرة ورقة مقص معايا؟', options: [['أكيد!', 'جاهز...'], ['مش دلوقتي', 'خايف؟ 😏']] },
+  hug: { text: 'أروح أحضنه؟', options: [['روح!', 'جاي ❤️'], ['لسه', '...اتكسفت. 😳']] },
+};
+
+/** The question in the language they speak now (custom questions are shown as written). */
+export function localize(q: Question): Question {
+  const eg = speechLang() === 'eg' ? QUESTIONS_EG[q.id] : undefined;
+  if (!eg) return q;
+  return {
+    ...q,
+    text: eg.text,
+    options: q.options.map((o, i) => {
+      const [label, say] = eg.options[i] ?? [o.label, o.reaction.say];
+      return { label, reaction: { ...o.reaction, say } };
+    }),
+  };
+}
+
 /** Questions that need the partner on screen. */
 export const NEEDS_PARTNER = new Set(['hug', 'coffee', 'nap']);
 
@@ -85,8 +114,8 @@ export function customToQuestion(q: CustomQuestion): Question {
     q.text,
     { say: q.yes || '❤️', clip: 'happy', mood: 'answer-kind', effect: 'hearts' },
     q.noHurts
-      ? { say: q.no || '...okay. 💔', clip: 'pout', mood: 'answer-hurt', effect: 'cloud', follow: { kind: 'partner-hug' } }
-      : { say: q.no || 'Okay!', clip: 'wave', mood: 'answer-neutral' },
+      ? { say: q.no || L('...okay. 💔', '...ماشي. 💔'), clip: 'pout', mood: 'answer-hurt', effect: 'cloud', follow: { kind: 'partner-hug' } }
+      : { say: q.no || L('Okay!', 'ماشي!'), clip: 'wave', mood: 'answer-neutral' },
   );
 }
 
@@ -98,5 +127,5 @@ export function pickQuestion(opts: { custom: CustomQuestion[]; solo: boolean; re
   ];
   const fresh = pool.filter((q) => !opts.recent.includes(q.id));
   const from = fresh.length > 0 ? fresh : pool;
-  return from[Math.floor(rnd() * from.length)]!;
+  return localize(from[Math.floor(rnd() * from.length)]!);
 }
