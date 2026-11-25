@@ -1,7 +1,7 @@
 {
   "name": "together-desktop",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "A little world for the two of you — a pixel couple living on your desktop.",
   "scripts": {
