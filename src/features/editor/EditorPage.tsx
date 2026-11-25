@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BASE_APPEARANCE, randomizeAppearance } from '../../domain/appearance';
 import { createCharacter, createCouple, duplicateCharacter } from '../../domain/factory';
 import type { Character } from '../../domain/models';
-import { BELLO, MALOUKA, TEMPLATES } from '../../domain/templates';
+import { applyTemplate, isNameLocked, TEMPLATES } from '../../domain/templates';
 import type { ClipId } from '../../engine/clips';
 import { useApp } from '../../stores/app-store';
 import { CharacterPreview } from '../../ui/CharacterPreview';
@@ -26,10 +26,14 @@ export function EditorPage({ id, role }: Props) {
   const characters = useApp((s) => s.characters);
   const existing = id ? characters.find((c) => c.id === id) : undefined;
   const [initial] = useState<Character>(
-    // The first character starts as Bello (the creator's own look), the partner as Malouka; every part stays editable.
-    () =>
-      existing ??
-      (role === 'me' ? createCharacter('Bello', BELLO) : role === 'partner' ? createCharacter('Malouka', MALOUKA) : createCharacter('New character')),
+    // The first character starts as Bello, the partner as Malouka (their names are fixed; pick another
+    // base below to name them yourself). Every part of the look stays editable.
+    () => {
+      if (existing) return existing;
+      const start = role === 'me' ? 'bello' : role === 'partner' ? 'malouka' : null;
+      const t = TEMPLATES.find((x) => x.id === start);
+      return t ? applyTemplate(createCharacter(''), t) : createCharacter('New character');
+    },
   );
   const draft = useHistory<Character>(initial);
   const [tab, setTab] = useState<Tab>('Face');
@@ -40,6 +44,7 @@ export function EditorPage({ id, role }: Props) {
   const c = draft.value;
   const dirty = useMemo(() => JSON.stringify(c) !== JSON.stringify(existing ?? initial), [c, existing, initial]);
   const isNew = !existing;
+  const locked = isNameLocked(c);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -87,7 +92,9 @@ export function EditorPage({ id, role }: Props) {
   };
 
   const saveAsVersion = async () => {
-    const copy = { ...duplicateCharacter(c), name: `${c.name} (version)` };
+    // A copy is an ordinary character (only the original Bello / Malouka keep the fixed name).
+    const { signature: _signature, ...dup } = duplicateCharacter(c);
+    const copy = { ...dup, name: `${c.name} (version)` };
     await useApp.getState().saveCharacter(copy);
     setMessage(`Saved a copy as “${copy.name}”.`);
   };
@@ -131,7 +138,10 @@ export function EditorPage({ id, role }: Props) {
             placeholder={role === 'partner' ? 'Their name' : 'Your name'}
             onChange={(e) => draft.set({ ...c, name: e.target.value })}
             onFocus={(e) => isNew && e.target.select()}
+            disabled={locked}
+            title={locked ? `${c.name}'s name is fixed` : undefined}
           />
+          {locked && <span className="mt-1 block text-xs text-ink-soft">🔒 {c.name}'s name is fixed. Pick another base below to name them yourself.</span>}
         </label>
         <label className="min-w-44 flex-1">
           <span className="mb-1 block font-pixel text-sm text-ink-soft">Nickname — what the other one calls them</span>
@@ -141,6 +151,7 @@ export function EditorPage({ id, role }: Props) {
             maxLength={24}
             placeholder="e.g. Bubu, Habibi, Batata"
             onChange={(e) => draft.set({ ...c, nickname: e.target.value })}
+            disabled={locked}
           />
         </label>
       </div>
@@ -167,24 +178,22 @@ export function EditorPage({ id, role }: Props) {
             <Button onClick={() => draft.set({ ...c, appearance: { ...BASE_APPEARANCE } })}>Reset look</Button>
             <Button onClick={() => setPinned(pinned ? null : structuredClone(c))}>{pinned ? 'Unpin' : '📌 Pin to compare'}</Button>
           </div>
-          {isNew && (
-            <Card>
-              <p className="mb-2 font-pixel text-sm text-ink-soft">Start from a base (optional — every part stays editable)</p>
-              <div className="flex flex-wrap gap-3">
-                {TEMPLATES.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => draft.set({ ...c, appearance: { ...t.appearance } })}
-                    className="flex flex-col items-center rounded-xl border-2 border-line bg-card px-2 pt-1 hover:border-ink-soft"
-                  >
-                    <CharacterPreview appearance={t.appearance} scale={2} label={t.label} />
-                    <span className="pb-1 text-xs">{t.label}</span>
-                  </button>
-                ))}
-              </div>
-            </Card>
-          )}
+          <Card>
+            <p className="mb-2 font-pixel text-sm text-ink-soft">Start from a base (optional — every part stays editable; Bello and Malouka keep their own names)</p>
+            <div className="flex flex-wrap gap-3">
+              {TEMPLATES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => draft.set(applyTemplate(c, t))}
+                  className="flex flex-col items-center rounded-xl border-2 border-line bg-card px-2 pt-1 hover:border-ink-soft"
+                >
+                  <CharacterPreview appearance={t.appearance} scale={2} label={t.label} />
+                  <span className="pb-1 text-xs">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </Card>
           <PresetBar appearance={c.appearance} onApply={(appearance) => draft.set({ ...c, appearance })} />
         </div>
 

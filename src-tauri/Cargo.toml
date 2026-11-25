@@ -1,6 +1,6 @@
 [package]
 name = "together-desktop"
-version = "0.4.0"
+version = "0.4.1"
 description = "A little world for the two of you."
 authors = ["Bello"]
 edition = "2021"

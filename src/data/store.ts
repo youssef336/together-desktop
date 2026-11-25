@@ -3,6 +3,7 @@
 // adapter keeps the same API; the app shows a banner so it is never mistaken for the real thing.
 
 import Database from '@tauri-apps/plugin-sql';
+import { withSignature } from '../domain/templates';
 import type { AppearancePreset, Character, Couple, WorldEvent, WorldSettings } from '../domain/models';
 import { DEFAULT_SETTINGS } from '../domain/models';
 import { isTauri } from '../platform/bridge';
@@ -33,9 +34,10 @@ class SqliteStore implements Store {
 
   async listCharacters(): Promise<Character[]> {
     const rows = await (await this.conn()).select<{ data: string }[]>('SELECT data FROM characters ORDER BY created_at');
-    return rows.map((r) => JSON.parse(r.data) as Character);
+    return rows.map((r) => withSignature(JSON.parse(r.data) as Character));
   }
-  async saveCharacter(c: Character): Promise<void> {
+  async saveCharacter(input: Character): Promise<void> {
+    const c = withSignature(input);
     await (await this.conn()).execute(
       `INSERT INTO characters (id, name, data, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT(id) DO UPDATE SET name = $2, data = $3, updated_at = $5`,
@@ -121,8 +123,8 @@ class BrowserStore implements Store {
   private remove(key: string, id: string): void {
     this.write(key, this.read<{ id: string }[]>(key, []).filter((x) => x.id !== id));
   }
-  async listCharacters() { return this.read<Character[]>('characters', []); }
-  async saveCharacter(c: Character) { this.upsert('characters', c); }
+  async listCharacters() { return this.read<Character[]>('characters', []).map(withSignature); }
+  async saveCharacter(c: Character) { this.upsert('characters', withSignature(c)); }
   async deleteCharacter(id: string) { this.remove('characters', id); }
   async listCouples() { return this.read<Couple[]>('couples', []); }
   async saveCouple(c: Couple) { this.upsert('couples', c); }

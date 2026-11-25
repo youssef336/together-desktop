@@ -1,5 +1,6 @@
 import type { ActivityId } from '../domain/personality';
 import { isNaughty, type MischiefPace, type MischiefPrefs, mischiefOf, PACE_LABEL } from '../domain/mischief';
+import { isNameLocked } from '../domain/templates';
 import { ACTIVITIES } from '../engine/activities';
 import type { Actor } from '../engine/actor';
 import type { ClipId } from '../engine/clips';
@@ -108,7 +109,7 @@ export class ContextMenu {
           item('Do it now! 😈', () => void w.mischief.start(actor));
         }
       });
-      item('✏️  Rename…', () => void this.talk?.rename(actor));
+      if (!isNameLocked(actor.character)) item('✏️  Rename…', () => void this.talk?.rename(actor));
       item('Edit character…', () => void openMain(`editor:${actor.id}`));
       item('Change couple…', () => void openMain('couple'));
       item('Settings…', () => void openMain('settings'));
