@@ -5,7 +5,7 @@ import { isNaughty, mischiefOf, nextPrankIn, pickPrank, tugsToRelease } from '..
 import { DEFAULT_SETTINGS } from '../domain/models';
 import { createCharacter, createCouple, exportCharacter, importCharacter } from '../domain/factory';
 import { PERSONALITY_PRESETS } from '../domain/personality';
-import { BELLO, DEMO_B, MALOUKA } from '../domain/templates';
+import { applyTemplate, BELLO, DEMO_B, isNameLocked, MALOUKA, TEMPLATES, withSignature } from '../domain/templates';
 import { composeCharacter } from '../pixel/compose';
 import { pose } from '../pixel/pose';
 import { pickRounds, ROUND_KINDS } from '../domain/fight';
@@ -162,6 +162,32 @@ describe('activities', () => {
       expect(st.said.length).toBeGreaterThan(0);
     });
   }
+});
+
+describe('Bello and Malouka', () => {
+  const t = (id: string) => TEMPLATES.find((x) => x.id === id)!;
+  it('picking their template names the character and locks the name', () => {
+    const c = applyTemplate(createCharacter('Mina'), t('malouka'));
+    expect(c.name).toBe('Malouka');
+    expect(isNameLocked(c)).toBe(true);
+    expect(MALOUKA.hat).toBe('none'); // no crown
+    // Renaming does not stick: every save goes through withSignature.
+    expect(withSignature({ ...c, name: 'Other', nickname: 'x' })).toMatchObject({ name: 'Malouka', nickname: '' });
+  });
+  it('another template unlocks it and clears the borrowed name', () => {
+    const c = applyTemplate(applyTemplate(createCharacter(''), t('bello')), t('cozy'));
+    expect(isNameLocked(c)).toBe(false);
+    expect(c.name).toBe('');
+    expect(applyTemplate(createCharacter('Mina'), t('cozy')).name).toBe('Mina');
+  });
+  it('recognises old data: by name, and the crowned Malouka look loses its crown', () => {
+    expect(withSignature(createCharacter('Bello', BELLO)).signature).toBe('bello');
+    const old = withSignature(createCharacter('New character', { ...MALOUKA, hat: 'crown' }));
+    expect(old).toMatchObject({ signature: 'malouka', name: 'Malouka' });
+    expect(old.appearance.hat).toBe('none');
+    const other = createCharacter('BTA', DEMO_B);
+    expect(withSignature(other)).toBe(other);
+  });
 });
 
 describe('fight', () => {

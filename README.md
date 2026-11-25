@@ -21,7 +21,7 @@ Every now and then, out of nowhere, one of them snaps (*«إنت كلت البط
 
 It's rare and never starts when one of them is already sad. Start one yourself: right-click → **More… → 😤 Pick a fight (then make up)**. The fight lowers their mood a little; making up raises it a lot more.
 
-**Malouka 👑**, Bello's partner, is now a template (twin tails, a gold crown, a rose-red dress) and the starting look for a new partner.
+**Bello and Malouka** are the app's own couple. Bello (white messy hair, light blue hoodie) is the starting look for your character, Malouka (twin tails, rose-red dress) for your partner. Pick either template and the character takes that name, and it can't be changed (the name field and right-click → Rename are locked). Pick any other base to name a character yourself.
 
 ## New — 😈 Mischief (opt-in, per character)
 

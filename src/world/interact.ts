@@ -1,4 +1,5 @@
 import { newId } from '../domain/models';
+import { isNameLocked } from '../domain/templates';
 import { pickQuestion, type Question } from '../domain/questions';
 import type { Actor } from '../engine/actor';
 import { store } from '../data/store';
@@ -87,6 +88,7 @@ export class Interactions {
   /** Rename from the desktop: a bubble with a text field. */
   async rename(actor: Actor): Promise<void> {
     const c = actor.character;
+    if (isNameLocked(c)) return; // Bello and Malouka keep their names
     const name = await this.choice.askText(actor, 'What should I be called?', c.name);
     if (!name || name === c.name) return;
     const updated = { ...c, name, updatedAt: Date.now() };

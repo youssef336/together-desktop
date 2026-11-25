@@ -1,5 +1,6 @@
 import type { Appearance } from './appearance';
 import type { MischiefPrefs } from './mischief';
+import type { Signature } from './templates';
 import type { ActivityId, Personality, Preferences } from './personality';
 
 export interface Character {
@@ -13,6 +14,11 @@ export interface Character {
   preferences: Preferences;
   /** Sprite source. `procedural` = built from `appearance`; imported packs arrive in a later phase. */
   sprite: { kind: 'procedural' };
+  /**
+   * Bello and Malouka are the app's own couple: picking their template gives the character that
+   * name, and it can't be renamed (see domain/templates.ts). Missing = an ordinary character.
+   */
+  signature?: Signature;
   createdAt: number;
   updatedAt: number;
 }
